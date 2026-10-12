@@ -18,8 +18,8 @@ The current view uses the user's supplied movie screenshots as the composition r
 
 Open **Trial controls** at the top right or press **H** to access the controls below. H or Escape closes the panel. The panel starts closed to preserve the cinematic composition.
 
-- Move within the scene for continuous head and independent eye motion. Leaving returns to center. Head turns are bounded to roughly ±12° yaw and ±7° pitch because the unseen sides/back have been removed.
-- **Blink** closes and opens the eyelids; automatic blinking is enabled initially.
+- Move within the scene for continuous head and independent eye motion. The eyes acquire the target before the head and compensate as the head catches up, with eased motion instead of an instantaneous eye rotation. Leaving returns to center. Head turns are bounded to roughly ±12° yaw and ±7° pitch because the unseen sides/back have been removed.
+- **Blink** closes and opens the eyelids with a quicker close and softer reopen; automatic blinking uses irregular intervals and occasional double blinks. **Slow blink preview** slows only the next blink by four times for inspection; it starts off.
 - **Neutral**, **Smirk**, **Surprised**, **Skeptical** blend real facial shape keys. The photographed skin, brows and facial hair deform with that surface; the eyes rotate independently.
 - **Replay turn** runs a slow sweep, a reversal and vertical movement. Click it again to stop. Pointer movement does not interrupt replay.
 - **Center** resets the pose.
@@ -31,9 +31,9 @@ Open **Trial controls** at the top right or press **H** to access the controls b
 
 The face is a GLB exported from Blender 4.5.3 LTS + MPFB 2.0.18. Its reduced rig has four bones (root, head and two eyes), with 14 facial shape controls retained for the visible actions. The viewer applies those controls directly across the relevant meshes. It is not a sprite bank or a screen-space portrait rotation.
 
-The generated portrait is projected onto neutral-pose UVs on the front of the face and eyes. Pores, wrinkles and individual facial hairs are image detail, without extra hair geometry, normal maps or runtime AI. The old brow, lash and beard cards are removed. Lips are thinner, and eye surfaces have lower roughness. This improves the frontal likeness but does not make the underlying geometry an actor scan. Wide turns, extreme expressions, the mouth interior and eye/lid edges still need art direction. No final asset acceptance is claimed.
+The generated portrait is projected onto neutral-pose UVs on the front of the face and eyes. A separate 512×170 closed-eyelid strip prevents the open-eye photo from stretching over closing lids. Its lookup follows the deformed face position; it blends in only around the lids during a blink. Full closure suppresses eye-wide and squint expression weights, including during surprise. Pores, wrinkles and individual facial hairs are image detail, without extra hair geometry, normal maps or runtime AI. The old brow, lash and beard cards are removed. Lips are thinner, and eye surfaces have lower roughness. This improves the frontal likeness but does not make the underlying geometry an actor scan. Wide turns, extreme expressions, the mouth interior and eye/lid edges still need art direction. No final asset acceptance is claimed.
 
-The exported GLB is 944,136 bytes (about 0.94 MB), with 8,224 triangles, two meshes, two draw calls and one embedded 1024×1024 JPEG shared by skin and eyes. The previous front-only version was 2,211,364 bytes and 9,300 triangles in five meshes. The original was 14,429,308 bytes, 25,878 triangles, nine meshes, 163 bones and 52 maximum facial targets.
+The exported GLB is 944,136 bytes (about 0.94 MB), with 8,224 triangles, two meshes, two draw calls and one embedded 1024×1024 JPEG shared by skin and eyes. The new eyelid strip adds 20,406 bytes, making the total face asset download 964,542 bytes (about 0.96 MB). It adds one small texture and a local texture sample during blinks, but no geometry, bones, morphs, draw calls or rendering passes. The previous front-only version was 2,211,364 bytes and 9,300 triangles in five meshes. The original was 14,429,308 bytes, 25,878 triangles, nine meshes, 163 bones and 52 maximum facial targets.
 
 The viewer caps its internal render buffer to 960×600 or smaller, never above a pixel ratio of one. Shadows are disabled. It renders at up to 30 fps during pointer motion, expression changes or blinks, then stops issuing render calls while settled. Automatic blinks wake the renderer briefly via a timer. Hidden documents cancel both animation and blink scheduling. A local shader fades only the front face into black; it does not require a shadow pass. Texture anisotropy is capped at four; there are no additional lighting or postprocessing passes.
 
@@ -42,6 +42,8 @@ The viewer caps its internal render buffer to 960×600 or smaller, never above a
 - `assets/tony-head-source.blend`: editable authored character, with textures packed. Original modeling controls and uncropped source are preserved. It precedes the export-only bust/beard/cornea cleanup.
 - `assets/tony-head.glb`: generated bust used by the viewer.
 - `assets/tony-head-build.json`: chosen shape parameters, bone names, facial controls and mesh sizes.
+- `assets/closed-eyelids.jpg`: 512×170 matched blink texture (20,406 bytes). Its generation and crop coordinates are recorded in `assets/closed-eyelids-provenance.json`.
+- `scripts/prepare_eye_patch.py`: reproducible cropping and JPEG encoding of the generated closed-eye portrait in Blender.
 - `assets/tony-diffuse.jpg`: generated portrait compressed to a 1024×1024 build input; embedded in the GLB, not fetched separately by the viewer.
 - `assets/tony-diffuse-provenance.json`: generation prompt, origin and conversion record. Original generation is preserved outside the repo by the imagegen tool.
 - `scripts/generate_head.py`: authoring/export recipe, including explicit export-material corrections.
@@ -81,3 +83,5 @@ For the front-face reduction, `python3 prototypes/3d-face/scripts/audit_face_bud
 In the final bounded idle check, six DOM samples 200 ms apart all reported frame 311 and `active=false`. Manual blink and surprise resumed rendering, and the browser reported no errors. The budget check also asserts front-face bounds exclude neck, ears and rear geometry. JavaScript syntax and Git whitespace checks passed.
 
 For the likeness revision, the budget check passes at 944,136 bytes / 8,224 triangles / four bones / 14 controls / two meshes. At the same 1280×720 test viewport, six samples 200 ms apart all reported frame 55, `active=false`, 459,840 framebuffer pixels and two draw calls. Neutral, smirk, surprise, blink and replay were checked in the browser. These verify bounded rendering work, not the user's device FPS or final visual acceptance.
+
+For the eye-motion revision, the asset audit includes the external eyelid strip and passes at 964,542 bytes total. Normal-speed surprise blinking reached full closure for both lids (`blinkPeak=1.000`). A slow preview visually confirmed the closed-lid texture. The replay showed gaze counter-rotation as the head turned. Six idle samples 200 ms apart all stayed at frame 41, with two draw calls, 8,224 triangles and 154,568 pixels in the default browser pane. No browser warnings/errors were logged. This is bounded-work verification, not a measured FPS promise. `blink-preview.png` captures the closed lids.

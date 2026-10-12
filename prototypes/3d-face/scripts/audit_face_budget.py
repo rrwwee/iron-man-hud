@@ -5,16 +5,20 @@ from pathlib import Path
 
 path = Path(__file__).resolve().parents[1] / "assets" / "tony-head.glb"
 data = path.read_bytes()
+lid_path = path.with_name("closed-eyelids.jpg")
+lid_bytes = lid_path.stat().st_size
+total_bytes = len(data) + lid_bytes
 size = struct.unpack_from("<I", data, 12)[0]
 model = json.loads(data[20:20 + size])
 bones = max(len(s["joints"]) for s in model.get("skins", [{"joints": []}]))
 morphs = max(len(p.get("targets", [])) for m in model["meshes"] for p in m["primitives"])
 triangles = sum(model["accessors"][p["indices"]]["count"] // 3 for m in model["meshes"] for p in m["primitives"])
-result = {"bytes": len(data), "bones": bones, "max_morphs": morphs, "triangles": triangles,
-          "meshes": len(model["meshes"]), "images": len(model.get("images", []))}
+result = {"bytes": total_bytes, "model_bytes": len(data), "eyelid_bytes": lid_bytes,
+          "bones": bones, "max_morphs": morphs, "triangles": triangles,
+          "meshes": len(model["meshes"]), "images": len(model.get("images", [])) + 1}
 print(json.dumps(result, indent=2))
 violations = []
-for label, value, limit in [("bytes", len(data), 3_000_000), ("bones", bones, 4),
+for label, value, limit in [("bytes", total_bytes, 3_000_000), ("bones", bones, 4),
                             ("morphs", morphs, 16), ("triangles", triangles, 12_000),
                             ("meshes", len(model["meshes"]), 6)]:
     if value > limit:

@@ -1,0 +1,19 @@
+{
+  "origin": "Built-in imagegen edit of the existing generated portrait, changing only the eyes to closed eyelids",
+  "prompt": "Use case: identity-preserve. Edit target: the supplied generated frontal Tony Stark inspired portrait. Change ONLY the eyes: both eyelids fully and naturally closed during a relaxed blink. Upper lids cover the eyeballs, eyelashes meet the lower eyelid in a fine gently curved line toward the bottom of the eye opening. Photorealistic detailed eyelid skin, subtle folds. No visible iris, pupil, or sclera. No squinting, no squeezed eyelids, no smiling. Keep EVERY other facial detail, eyebrow position, identity, geometry, head size and placement, lighting, skin texture, nose, mouth, background, haircut exactly unchanged. Eyes remain at precisely the same locations. This is a matched animation texture for the same face, so exact pixel alignment to the original portrait is essential. Same square image and framing. Do not change anything beyond the eyelid regions. Do not add words or a border.",
+  "sourceDimensions": [
+    1254,
+    1254
+  ],
+  "sourceCropTopOrigin": {
+    "xMin": 0.23,
+    "xMax": 0.77,
+    "yMin": 0.34,
+    "yMax": 0.52
+  },
+  "outputDimensions": [
+    512,
+    170
+  ],
+  "preparation": "Blender image crop, resize and JPEG encoding; no further painting. Original imagegen result preserved outside the repository."
+}
