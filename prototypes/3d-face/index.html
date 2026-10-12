@@ -2,14 +2,17 @@
 <!-- DISPOSABLE: an authored MPFB head, real skeletal motion, and facial morph controls. -->
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stark · 3D face trial</title><link rel="stylesheet" href="style.css"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script></head>
 <body>
-<header><span>IRON MAN HUD / FREE 3D PROTOTYPE</span><h1>A face with a little attitude.</h1><p>Move your pointer across the scene. Try a blink, then change the expression.</p></header>
+<header><span>MARK III / INTERNAL DISPLAY</span><button id="controlsToggle" aria-expanded="false" aria-controls="trialControls">Trial controls</button></header>
 <main id="stage" aria-label="Move the pointer over the scene to turn the head">
   <canvas id="scene" aria-label="Interactive Tony-inspired 3D head"></canvas>
-  <div class="hud"><div class="visor"></div><aside class="left"><b>STARK</b><small>OCULAR TRACK</small><div class="meter"><i></i></div><p>LOCAL RENDER<br>FACIAL RIG ONLINE</p></aside><aside class="right"><b id="expressionHud">NEUTRAL</b><small>EXPRESSION</small><div class="meter"><i></i></div><p>HEAD + EYES<br>DIRECT CONTROL</p></aside><div class="reticle"></div><span class="footnote">MPFB / GLB · ROUGH LIKENESS STUDY</span></div>
+  <div class="face-vignette"></div>
+  <canvas id="hologram" class="hud" aria-hidden="true"></canvas>
+  <div class="lens-shade"></div>
   <div id="loading">Loading the authored head…</div>
 </main>
-<section class="tools" aria-label="Face controls"><div class="expressions"><button data-expression="neutral" aria-pressed="true">Neutral</button><button data-expression="smirk" aria-pressed="false">Smirk</button><button data-expression="surprise" aria-pressed="false">Surprised</button><button data-expression="skeptical" aria-pressed="false">Skeptical</button></div><div class="actions"><button id="blink">Blink</button><button id="replay">Replay turn</button><button id="center">Center</button><label><input id="autoBlink" type="checkbox" checked> Auto blink</label><label><input id="hudToggle" type="checkbox" checked> HUD</label><label><input id="neutralLight" type="checkbox"> Inspection light</label></div></section>
+<section id="trialControls" hidden aria-label="Face controls"><div class="panel-heading"><span>Face trial</span><span id="expressionHud">neutral</span></div><div class="expressions"><button data-expression="neutral" aria-pressed="true">Neutral</button><button data-expression="smirk" aria-pressed="false">Smirk</button><button data-expression="surprise" aria-pressed="false">Surprised</button><button data-expression="skeptical" aria-pressed="false">Skeptical</button></div><div class="actions"><button id="blink">Blink</button><button id="replay">Replay turn</button><button id="center">Center</button></div><div class="toggles"><label><input id="autoBlink" type="checkbox" checked> Auto blink</label><label><input id="hudToggle" type="checkbox" checked> HUD</label><label><input id="neutralLight" type="checkbox"> Inspection light</label></div>
 <div class="readouts"><output id="pose">Head: centered</output><output id="rig">Reading rig…</output></div>
-<p class="disclaimer">A rough, freely authored Tony-inspired likeness. Continuous 3D head/eye movement and real facial deformations; no AI inference or paid service.</p>
-<nav class="switcher" aria-label="Lighting variants"><button id="previous" aria-label="Previous lighting">←</button><span id="variantLabel">A / HUD lighting</span><button id="next" aria-label="Next lighting">→</button></nav>
+<p class="disclaimer">Rough MPFB likeness · move across the face to look around</p>
+<nav class="switcher" aria-label="Lighting variants"><button id="previous" aria-label="Previous lighting">←</button><span id="variantLabel">A / Cinematic</span><button id="next" aria-label="Next lighting">→</button></nav></section>
+<p class="interaction-hint">Move to look around <span>·</span> Press H for controls</p>
 <script type="module" src="viewer.js"></script></body></html>

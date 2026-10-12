@@ -14,12 +14,18 @@ python3 -m http.server 4188 --bind 127.0.0.1 --directory prototypes/3d-face
 
 Open http://127.0.0.1:4188/?variant=hud. Blender is **not** needed to run the viewer. Three.js is vendored, so the viewer makes no CDN, inference or avatar-service requests. A local HTTP server is required for JavaScript modules and loading the GLB.
 
+The current view uses the user's supplied movie screenshots as the composition reference: full-viewport black background, an extreme face close-up, very low ambient light, warm/cool face spotlights, and layered projected instruments near the cheeks and screen edges. The underlying head geometry is unchanged; this revision evaluates camera, lighting and HUD presence, not an improved likeness. The film screenshots are references only and are not bundled in the prototype.
+
+Open **Trial controls** at the top right or press **H** to access the controls below. H or Escape closes the panel. The panel starts closed to preserve the cinematic composition.
+
 - Move within the scene for continuous head, neck and independent eye motion. Leaving returns to center.
 - **Blink** closes and opens the eyelids; automatic blinking is enabled initially.
 - **Neutral**, **Smirk**, **Surprised**, **Skeptical** blend real facial shape keys, including matching eyebrow, beard and eyelash shapes.
 - **Replay turn** runs a slow sweep, a reversal and vertical movement. Click it again to stop. Pointer movement does not interrupt replay.
 - **Center** resets the pose.
-- Toggle the HUD or inspection lighting. The bottom arrows switch between `?variant=hud` and `?variant=inspection` without changing the model.
+- Toggle the HUD or inspection lighting. The arrows inside the controls panel switch between `?variant=hud` and `?variant=inspection` without changing the model.
+
+`hud.js` draws the edge instruments directly onto a transparent canvas. The instruments are visual prototypes, not functional suit systems. Their slow incidental motion is suppressed when the browser requests reduced motion. `cinematic-preview.png` captures this revision; `preview.png` preserves the earlier bust composition for comparison.
 
 ## What is real and what remains rough
 
