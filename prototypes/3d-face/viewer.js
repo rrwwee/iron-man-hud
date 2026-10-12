@@ -21,7 +21,7 @@ let blinkClose=.075,blinkHold=.04,blinkOpen=.155,blinkPeak=0;
 let model,head,eyes=[],morphMeshes=[],loaded=false,raf=0,blinkTimer=0,hudDirty=true;
 let photographicEyes,originalEyes;
 const eyeGaze={value:new THREE.Vector2()};
-const eyeRelaxation={value:new THREE.Vector2(1,.95)};
+const eyeRelaxation={value:new THREE.Vector2(.6,.57)};
 let elapsed=0,lastFrame=0,renderCount=0;
 const started=performance.now(),rest=new Map(),eyeRestWorld=new Map();
 const expressions={neutral:{},smirk:{mouthSmileLeft:.75,mouthDimpleLeft:.3,browOuterUpRight:.2},surprise:{browInnerUp:.85,browOuterUpLeft:.6,browOuterUpRight:.6,eyeWideLeft:.55,eyeWideRight:.55,jawOpen:.3},skeptical:{browOuterUpRight:.9,browDownLeft:.5,eyeSquintLeft:.3,mouthPressLeft:.4,mouthSmileRight:.16}};
@@ -139,7 +139,7 @@ function frame(now){
   lidClosure.value.set(blinkLeft,blinkRight);
   const goal=expressions[expression],keys=new Set([...Object.keys(expressionMix),...Object.keys(goal)]);let changing=false;
   keys.forEach(k=>{expressionMix[k]=(expressionMix[k]||0)+((goal[k]||0)-(expressionMix[k]||0))*(1-Math.exp(-dt*10));if(Math.abs((goal[k]||0)-expressionMix[k])>.001)changing=true;});
-  const relaxed=$('relaxedEyes').checked?1:0;
+  const relaxed=$('relaxedEyes').checked?.6:0;
   eyeRelaxation.value.set(relaxed*(1-(expressionMix.eyeWideLeft||0)/.55),relaxed*.95*(1-(expressionMix.eyeWideRight||0)/.55));
   euler.set(y*.12,x*.21,0);q.setFromEuler(euler);head.quaternion.copy(rest.get(head)).multiply(q);eyes.forEach(b=>aimEye(b,gazeY*.085,gazeX*.14));
   eyeGaze.value.set(gazeX*.14-x*.21,gazeY*.085-y*.12);
@@ -161,6 +161,7 @@ function frame(now){
   $('pose').dataset.blink=blink.toFixed(3);$('pose').dataset.blinkPeak=blinkPeak.toFixed(3);$('pose').dataset.gazeYaw=(gazeX*.14*180/Math.PI).toFixed(2);$('pose').dataset.eyeYaw=((gazeX*.14-x*.21)*180/Math.PI).toFixed(2);
   $('pose').dataset.eyeSurface=photographicEyes.visible?'photographic':'globe';
   $('pose').dataset.relaxedEyes=String($('relaxedEyes').checked);
+  $('pose').dataset.lidRest=eyeRelaxation.value.x.toFixed(2);
   if(hudDirty){drawHUD(hudContext,stage.clientWidth,stage.clientHeight,0,0,0,expression);hudDirty=false;}
   if(active)wake();else scheduleBlink();
 }
