@@ -295,6 +295,9 @@ if os.environ.get("IRONMAN_CROP_BUST", "1") == "1":
 
 copy_root.name = "TonyInspired"
 copy_base.name = "TonyInspired_Face"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from reduce_to_face import reduce_to_face
+reduce_to_face(copy_root, copy_base)
 expected = {"eyeBlinkLeft", "eyeBlinkRight", "mouthSmileLeft", "mouthSmileRight", "browInnerUp"}
 names = {k.name for k in copy_base.data.shape_keys.key_blocks}
 if not expected.issubset(names):
