@@ -20,7 +20,7 @@ The three layouts differ in composition and hierarchy, not merely tint. Avoid co
 python3 -m http.server 4188 --bind 127.0.0.1 --directory prototypes/3d-face
 ```
 
-Open http://127.0.0.1:4188/?variant=visor. The bottom comparison controls and left/right keys switch treatments without reloading the face. H opens existing face controls. Comparison controls are available on loopback hosts (or explicitly with `?trial=1`); the entire directory remains a throwaway prototype outside production.
+Open http://127.0.0.1:4188/?variant=visor&mode=visual. The bottom comparison controls and left/right keys switch treatments without reloading the face. H opens existing face controls. Comparison controls are available on loopback hosts (or explicitly with `?trial=1`); the entire directory remains a throwaway prototype outside production.
 
 The HUD is one capped 2D canvas, drawn on selection, resize or expression change. It has no continuous animation loop. The face retains its existing framebuffer cap, three draw calls and idle pause. A brief CSS reveal is the only new animation and respects reduced-motion preferences.
 
@@ -30,4 +30,4 @@ At the normal 1280×720 browser size, both the face and HUD canvases use 460,800
 
 All three variants were inspected in the browser and captured in `hud-visor-preview.png`, `hud-targeting-preview.png` and `hud-diagnostic-preview.png`. Button switching and keyboard wraparound update the URL and selected labels without reloading the model. With automatic blinks disabled, two settled observations retained face frame 5 and HUD draw count 4. Browser warnings/errors were empty. JavaScript syntax, the existing model-budget audit and Git whitespace checks pass. These measurements bound the work; they are not device-specific FPS measurements.
 
-The design decision remains open. No visual treatment is accepted yet, and this pass does not implement panel interactions.
+The design decision remains open. No visual treatment is accepted yet. This original pass did not implement panel interactions; see [NAVIGATION-TRIAL.md](NAVIGATION-TRIAL.md) for the subsequent radial-menu prototype.

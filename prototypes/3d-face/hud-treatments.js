@@ -77,27 +77,27 @@ function spatial(ctx,p,x,y,r){
   ctx.restore();
 }
 
-export function drawVisor(ctx,p,expression){
+export function drawVisor(ctx,p,expression,{interactive=false}={}){
   const {line,text,mono,arc,bars,rows,cross}=p;
-  optic(ctx,p,{x:194,y:406,r:227,color:C.amber,tilt:.69,phase:.25});
-  spatial(ctx,p,1428,434,260);
-  ctx.save();ctx.translate(32,89);ctx.transform(1,.055,-.15,1,0,0);
+  if(!interactive)optic(ctx,p,{x:194,y:406,r:227,color:C.amber,tilt:.69,phase:.25});
+  spatial(ctx,p,1428,interactive?314:434,interactive?145:260);
+  if(!interactive){ctx.save();ctx.translate(32,89);ctx.transform(1,.055,-.15,1,0,0);
   text('HELMET INTERFACE / OPTICAL RELAY',0,0,10,C.ice,.65);line([[0,12],[348,12]],C.ice,.6);
   rows(0,39,282,[['RETINAL ALIGNMENT','99.84'],['LINK INTEGRITY','NOMINAL'],['EXTERNAL FEED','LIVE']],C.ice);
-  bars(0,143,45,3,18,C.ice,2);ctx.restore();
+  bars(0,143,45,3,18,C.ice,2);ctx.restore();}
   ctx.save();ctx.translate(1230,77);ctx.transform(1,-.035,.12,1,0,0);
   mono('03 : 14 : 08',315,0,14,C.ice,.7,'right');text('NAVIGATION / VECTOR RESOLUTION',315,25,9,C.ice,.5,'right');
   rows(0,57,315,[['AZIMUTH','186.024'],['PITCH','−02.91'],['RANGE','000.00']],C.ice);ctx.restore();
   // Foreground optical glass: small local overlays, never a full mask on the face.
-  arc(956,286,61,.1,5.4,C.ice,.3);arc(956,286,50,2.5,6.2,C.amber,.65,1.5);
+  if(!interactive){arc(956,286,61,.1,5.4,C.ice,.3);arc(956,286,50,2.5,6.2,C.amber,.65,1.5);
   cross(956,286,7,C.ice,.45);line([[974,318],[1058,362],[1192,362]],C.ice,.55);
-  text('FOCUS LOCK',1062,353,9,C.ice,.6);mono('1.000',1192,380,11,C.white,.8,'right');
-  ctx.save();ctx.translate(24,666);ctx.rotate(-.045);
+  text('FOCUS LOCK',1062,353,9,C.ice,.6);mono('1.000',1192,380,11,C.white,.8,'right');}
+  if(!interactive){ctx.save();ctx.translate(24,666);ctx.rotate(-.045);
   text('J.A.R.V.I.S.',0,0,24,C.amber,.85);text('NEURAL INTERFACE STABLE',0,24,10,C.ice,.6);
   for(let i=0;i<14;i++){const x=i*18;arc(x,48,4,0,TAU,i%5===0?C.amber:C.ice,.45);}
-  line([[0,71],[268,71],[303,43]],C.amber,.55);ctx.restore();
-  text('INTERNAL CAMERA / '+expression.toUpperCase(),1539,742,10,C.ice,.7,'right');
-  mono('SYS  0100 / 042',1539,763,9,C.ice,.35,'right');
+  line([[0,71],[268,71],[303,43]],C.amber,.55);ctx.restore();}
+  if(!interactive)text('INTERNAL CAMERA / '+expression.toUpperCase(),1539,742,10,C.ice,.7,'right');
+  if(!interactive)mono('SYS  0100 / 042',1539,763,9,C.ice,.35,'right');
   line([[369,538],[484,538],[526,510]],C.ice,.4);text('BIOMETRIC FEED',372,526,10,C.ice,.55);
   for(let i=0;i<23;i++){const y=209+i*17;line([[12,y],[i%4===0?25:18,y]],C.amber,.45);line([[1588,y],[i%4===0?1574:1582,y]],C.ice,.5);}
 }
@@ -167,9 +167,9 @@ export const treatments=[
   {key:'diagnostic',letter:'C',name:'Diagnostic',description:'Signal banks · panoramic telemetry',draw:drawDiagnostic},
 ];
 
-export function drawTreatment(ctx,w,h,key,expression){
+export function drawTreatment(ctx,w,h,key,expression,options={}){
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);ctx.save();ctx.scale(w/1600,h/800);
   ctx.globalCompositeOperation='source-over';ctx.lineCap='butt';ctx.lineJoin='round';
-  (treatments.find(t=>t.key===key)||treatments[0]).draw(ctx,instruments(ctx),expression);
+  (options.interactive?treatments[0]:(treatments.find(t=>t.key===key)||treatments[0])).draw(ctx,instruments(ctx),expression,options);
   ctx.restore();
 }

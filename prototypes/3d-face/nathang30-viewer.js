@@ -1,7 +1,7 @@
 // Disposable candidate: Nathang30 geometry/UVs, authored local expression controls.
 import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
-import { createHUDTrial } from './hud-trial.js?v=3';
+import { createHUDTrial } from './hud-trial.js?v=menu-5';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});
@@ -40,15 +40,16 @@ window.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select
 function chooseExpression(name){expression=name;$('expressionHud').textContent=name.toUpperCase();document.querySelectorAll('[data-expression]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.expression===name)));hudDirty=true;wake();}
 document.querySelectorAll('[data-expression]').forEach(b=>b.onclick=()=>chooseExpression(b.dataset.expression));
 function beginBlink(automatic=false){clearTimeout(blinkTimer);elapsed=(performance.now()-start)/1000;blinkAt=elapsed;blinkPeak=0;const speed=$('slowBlink').checked?4:1;blinkClose=(.065+Math.random()*.02)*speed;blinkHold=.045*speed;blinkOpen=(.15+Math.random()*.035)*speed;nextBlink=elapsed+(automatic&&Math.random()<.1?.48:3+Math.random()*4);wake();}
-function scheduleBlink(){clearTimeout(blinkTimer);if($('autoBlink').checked&&!document.hidden)blinkTimer=setTimeout(()=>beginBlink(true),Math.max(50,(nextBlink-elapsed)*1000));}
+function scheduleBlink(){clearTimeout(blinkTimer);if($('autoBlink').checked&&!document.hidden&&!hudTrial.isOpen)blinkTimer=setTimeout(()=>beginBlink(true),Math.max(50,(nextBlink-elapsed)*1000));}
 $('blink').onclick=()=>beginBlink();$('autoBlink').onchange=()=>{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;scheduleBlink();};
 function stopReplay(){replayStart=null;$('replay').textContent='Replay turn';}
 for(const [label,value] of [['Turn left',-1],['Turn right',1]]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{stopReplay();tx=value;ty=0;wake();};document.querySelector('.actions').append(b);}
 const held=document.createElement('button');held.textContent='Hold blink';held.setAttribute('aria-pressed','false');held.onclick=()=>{holdBlink=!holdBlink;held.setAttribute('aria-pressed',String(holdBlink));wake();};document.querySelector('.actions').append(held);
 $('center').onclick=()=>{stopReplay();tx=ty=x=y=gx=gy=0;wake();};
 $('replay').onclick=()=>{if(replayStart!==null){stopReplay();wake();return;}replayStart=(performance.now()-start)/1000;$('replay').textContent='Stop replay';wake();};
-stage.addEventListener('pointermove',e=>{if(replayStart!==null)return;const r=stage.getBoundingClientRect();tx=THREE.MathUtils.clamp((e.clientX-r.left)/r.width*2-1,-1,1);ty=THREE.MathUtils.clamp((e.clientY-r.top)/r.height*2-1,-1,1);wake();});
+stage.addEventListener('pointermove',e=>{if(replayStart!==null||hudTrial.isOpen||e.target.closest('[data-ui]'))return;const r=stage.getBoundingClientRect();tx=THREE.MathUtils.clamp((e.clientX-r.left)/r.width*2-1,-1,1);ty=THREE.MathUtils.clamp((e.clientY-r.top)/r.height*2-1,-1,1);wake();});
 stage.addEventListener('pointerleave',()=>{if(replayStart===null)tx=ty=0;wake();});
+document.addEventListener('hud-panel',e=>{if(e.detail.open){stopReplay();tx=ty=0;clearTimeout(blinkTimer);}else{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;}wake();});
 function resize(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.min(1,960/w,600/h);renderer.setPixelRatio(scale);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();$('hologram').width=Math.round(w*scale);$('hologram').height=Math.round(h*scale);hudDirty=true;wake();}
 new ResizeObserver(resize).observe(stage);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;clearTimeout(blinkTimer);}else{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;wake();scheduleBlink();}});
@@ -109,12 +110,16 @@ new GLTFLoader().load('./assets/nathang30-head.glb',gltf=>{
 function blinkWeight(age){if(age<0)return 0;const s=t=>t*t*(3-2*t);if(age<blinkClose)return s(age/blinkClose);if(age<blinkClose+blinkHold)return 1;if(age<blinkClose+blinkHold+blinkOpen)return 1-s((age-blinkClose-blinkHold)/blinkOpen);return 0;}
 // A slow wide sweep, fast reversal, vertical glance, then return to rest.
 const route=[[0,0],[-1,0],[1,0],[.6,-.5],[-.6,.4],[0,0]];
+const ocularAnchor=new THREE.Vector3(.0303,1.6252,.073),eyeProjected=new THREE.Vector3(),eyeRestProjected=new THREE.Vector3();
 function frame(now){
   raf=0;if(!loaded||document.hidden)return;if(now-lastFrame<1000/30){wake();return;}
   const dt=Math.min((now-lastFrame)/1000,.08);lastFrame=now;elapsed=(now-start)/1000;
   if(replayStart!==null){const p=(elapsed-replayStart)/1.5,i=Math.floor(p);if(i>=route.length-1){stopReplay();tx=ty=0;}else{const a=p-i;tx=THREE.MathUtils.lerp(route[i][0],route[i+1][0],a);ty=THREE.MathUtils.lerp(route[i][1],route[i+1][1],a);}}
   x+=(tx-x)*(1-Math.exp(-dt*6));y+=(ty-y)*(1-Math.exp(-dt*6));gx+=(tx-gx)*(1-Math.exp(-dt*22));gy+=(ty-gy)*(1-Math.exp(-dt*20));
   pivot.rotation.set(y*.12,x*.61,0,'YXZ');
+  eyeProjected.copy(ocularAnchor).sub(pivot.position).applyQuaternion(pivot.quaternion).add(pivot.position).project(camera);
+  eyeRestProjected.copy(ocularAnchor).project(camera);
+  hudTrial.setPose(x,y,{x:(eyeProjected.x+1)*stage.clientWidth/2,y:(1-eyeProjected.y)*stage.clientHeight/2,restX:(eyeRestProjected.x+1)*stage.clientWidth/2,restY:(1-eyeRestProjected.y)*stage.clientHeight/2});
   // Keep the small photo gaze within the fitted eye surfaces; large direction
   // changes come from the actual head geometry, not sliding photo plates.
   gaze.value.set(THREE.MathUtils.clamp(gx-x*.75,-1,1),gy-y*.5);

@@ -1,6 +1,6 @@
 # Iron Man HUD
 
-A cinematic, interactive web experience intended for visitors to explore and share.
+A cinematic personal website whose visitors explore content through an interactive helmet HUD.
 
 ## Language
 
@@ -13,6 +13,9 @@ _Avoid_: Hood
 
 **Panel**:
 A content window opened within the HUD, keeping the visitor inside the experience.
+
+**Menu item**:
+A selectable entry in the HUD that opens a Panel, plays a small audio item, or leads to an external site.
 
 **Demo**:
 The first desktop experience intended to be shared publicly for its humor or visual appeal.

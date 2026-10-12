@@ -6,9 +6,11 @@ The default is now a reduced **Nathang30 Tony Stark head**, with custom lightwei
 
 ## Current HUD comparison
 
-The face has been accepted as the working baseline for HUD design. The next open decision compares three graphic treatments on this same route: `?variant=visor` (A, oblique projected optics), `?variant=targeting` (B, restrained brackets and one ocular reticle), and `?variant=diagnostic` (C, signal banks and panoramic telemetry). The bottom comparison bar or left/right keys change the HUD without reloading the face. H still opens the face controls; inspection lighting now uses a separate `light=inspection` parameter.
+The current interaction pass is [the radial navigation trial](NAVIGATION-TRIAL.md), at `?variant=visor&mode=menu`. It has scrollable menu items, text/video Panels, a small audio player, an external link, a clickable SVG suit and fixed/subtle/stronger layered motion. The content is explicitly temporary. The original A/B/C visual comparison is still available with **Visuals only** or `mode=visual`.
 
-See [HUD-TRIAL.md](HUD-TRIAL.md) for the design rationale and trial scope. These are visual treatments, with static placeholder readouts; panel interactions have not been implemented. Screenshots are `hud-visor-preview.png`, `hud-targeting-preview.png` and `hud-diagnostic-preview.png`. No variant has been selected yet.
+The face has been accepted as the working baseline for HUD design. The next open decision compares three graphic treatments on this same route with `mode=visual`: `variant=visor` (A, oblique projected optics), `variant=targeting` (B, restrained brackets and one ocular reticle), and `variant=diagnostic` (C, signal banks and panoramic telemetry). The bottom comparison bar or left/right keys change the HUD without reloading the face. H still opens the face controls; inspection lighting now uses a separate `light=inspection` parameter.
+
+See [HUD-TRIAL.md](HUD-TRIAL.md) for the earlier graphic-comparison rationale and scope. These three treatments have static placeholder readouts; the radial mode adds a separate first interaction pass. Screenshots of the visual treatments are `hud-visor-preview.png`, `hud-targeting-preview.png` and `hud-diagnostic-preview.png`. No final variant or interaction has been selected yet.
 
 The three variants share one 2D canvas capped to the same 960×600 maximum as the face. It is cached between variant, resize and expression changes, and has no continuous animation loop. No new model, texture, font, dependency or render pass is loaded. Face asset bytes, geometry and three WebGL draw calls are unchanged.
 
