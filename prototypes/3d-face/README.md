@@ -95,3 +95,11 @@ The checkbox in Trial controls switches back to the earlier globes for direct co
 `eye-surface.js` contains the comparison surface. The versioned module URLs ensure a reload picks up a new trial instead of retaining an older cached module. The asset-budget script still measures the complete comparison GLB, including its hidden original eyes. Runtime DOM counters report the selected visible geometry.
 
 Verified at the normal 1280×720 browser size: the photographic option reports 7,292 triangles, two draw calls and 460,800 framebuffer pixels. Six idle samples 200 ms apart stayed at frame 2 and `active=false`. Turns and slow-blink closure were visually checked; the browser logged no warnings/errors. `eye-appearance-preview.png` shows the new default. The comparison remains open for the user's visual judgment.
+
+## Relaxed resting eyes
+
+**Relaxed gaze** is enabled by default in Trial controls. It lowers the photographic upper eyelid without shrinking the iris: a curved lid boundary samples the existing closed-eyelid strip, leaving the lower lid alone. A small left/right difference avoids exact symmetry. The surprise expression eases this rest treatment away so the eyes can open fully, and full blinks still replace the eye region with the closed texture. Uncheck **Relaxed gaze** for the earlier wide-eyed appearance.
+
+No model or texture assets were added. The upper-lid shader samples the same small eyelid texture only where needed. The face assets remain 964,542 bytes; visible geometry stays at 7,292 triangles and two draw calls with the same resolution and idle limits. This is not a measured device-FPS guarantee.
+
+Validation: neutral and surprise were visually compared, normal-speed blinking reached `blinkPeak=1.000`, and six 200 ms idle samples stayed at frame 40 with `active=false`, two draw calls and 460,800 framebuffer pixels. Browser warnings/errors, syntax and whitespace checks were clear; the asset audit passed. `relaxed-eye-preview.png` captures the resting look. Final visual acceptance remains with the user.
