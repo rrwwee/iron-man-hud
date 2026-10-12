@@ -2,7 +2,36 @@
 
 Decision: [Validate a free 3D face in motion and expression](https://github.com/rrwwee/iron-man-hud/issues/8).
 
-This is a rough **authored male MPFB character with a generated photographic face texture**. The texture supplies the Tony-inspired skin detail, brows, moustache, goatee and brown eyes. It is an early likeness study, not an actor scan, film asset or finished character.
+The default is now a reduced **Nathang30 Tony Stark head**, with custom lightweight expression controls. The previous MPFB trial remains available at `?model=mpfb&variant=hud` for comparison. Neither is a finished film asset or a validated final choice.
+
+## Current Nathang30 candidate
+
+The user's two downloads are organised under `source-assets/nathang30/`, with checksums and acquisition notes. The 17,067,128-byte GLB and 39,101,334-byte original ZIP are preserved unchanged and ignored by Git, alongside safely extracted OBJ/textures and the editable `head-trial.blend`. The originals remain local; the small derivative has its own [attribution and license notice](assets/NATHANG30-LICENSE.md).
+
+The actual GLB has no skeleton, morphs or animations. It contains a 43,132-triangle head/eye/mouth assembly within a 68,484-triangle suited body. The OBJ is also static. The head does include separate fitted eye surfaces and a wrapped photographic atlas. Its unused eye-atlas discs are seams on the backs of the eyes, **not closed eyelids**.
+
+`scripts/build_nathang30.py` isolates the face and original eye surfaces, removes the body, ears, neck, rear scalp and unseen mouth parts, reduces the head while preserving temple/cheek volume, resizes the atlas to 2048×1024 and authors seven subtle brow/mouth controls plus two eye-closure shapes. The viewer turns the actual geometry through ±35° yaw and ±7° pitch. No floating photographic eye plates from the previous version are used.
+
+Blinking is deliberately labelled approximate: a matched, generated 512×280 closed-eye texture wipes over the fitted eye surfaces and adjacent socket skin, while two shape keys retract the eye domes into the sockets. Small gaze changes shift the original iris texture within those same surfaces. This is not a full anatomical eyelid rig, independently rotating anatomical eyeballs, or a lip-sync system. The source's texture softness, painted highlights, eye-surface shape and limited mouth articulation remain visible, especially in inspection light.
+
+Press **H** for controls. **Turn left/right** holds a wide view; **Replay turn** sweeps and reverses; **Hold blink** exposes the lid treatment for inspection. **Smirk**, **Surprised**, and **Skeptical** use the new geometry morphs. **Compare previous MPFB head** opens the earlier trial. The primary question is whether this is a better shape/likeness base before investing in more eye anatomy work.
+
+Measured runtime assets: **634,456 bytes** including the eyelid image, **6,545 triangles**, **three draw calls**, no bones and nine authored morphs across three meshes. The existing ≤960×600 framebuffer cap, ≤1 pixel ratio, no shadows, ≤30 fps during motion, hidden-tab pause and idle rendering stop remain. These describe bounded workload, not measured FPS on the user's computer.
+
+Rebuild the candidate with the preserved GLB in place:
+
+```sh
+blender --background --factory-startup --disable-autoexec --python-exit-code 1 --python prototypes/3d-face/scripts/build_nathang30.py
+python3 prototypes/3d-face/scripts/audit_nathang30.py
+```
+
+`scripts/prepare_nathang30_lids.py` records the generated eyelid crop; `assets/nathang30-lids-provenance.json` records its source and crop. The atlas is embedded in the GLB, not fetched separately at runtime. The derived assets are **CC BY-NC-SA 4.0**, distinct from the old CC0-based MPFB work and unrelated source code. Keep this candidate within the noncommercial trial scope.
+
+Browser validation for this candidate: neutral, smirk, surprise and skeptical controls responded; both wide turns and held blink were visually checked. A normal blink reached `blinkPeak=1.000`. At the normal 1280×720 viewport the renderer reported 460,800 pixels, three draw calls and 6,545 triangles. With automatic blinking off, separate settled observations retained the same frame count. The browser logged no warnings or errors. `nathang30-preview.png` captures the current HUD. Both the new and old asset-budget scripts, JavaScript syntax and Git whitespace checks pass. Final visual acceptance is still pending.
+
+## Previous MPFB trial record
+
+The remaining sections document the earlier authored MPFB face and its iterations. Their geometry/budget descriptions apply to the comparison route, not the current default.
 
 ## Run the viewer
 

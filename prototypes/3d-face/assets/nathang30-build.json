@@ -1,0 +1,40 @@
+{
+  "source_triangles": 68484,
+  "source_head_triangles": 43132,
+  "license": "CC-BY-NC-SA-4.0",
+  "custom_morphs": [
+    "browInnerUp",
+    "browOuterUpLeft",
+    "browOuterUpRight",
+    "browDownLeft",
+    "mouthSmileLeft",
+    "mouthSmileRight",
+    "jawOpen"
+  ],
+  "parts": [
+    {
+      "name": "Face",
+      "vertices": 2656,
+      "triangles": 4865
+    },
+    {
+      "name": "EyeLeft",
+      "vertices": 422,
+      "triangles": 840
+    },
+    {
+      "name": "EyeRight",
+      "vertices": 422,
+      "triangles": 840
+    }
+  ],
+  "atlas": [
+    2048,
+    1024
+  ],
+  "bytes": 613808,
+  "blink_morphs": [
+    "eyeBlinkLeft",
+    "eyeBlinkRight"
+  ]
+}

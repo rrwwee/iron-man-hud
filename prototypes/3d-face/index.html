@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- DISPOSABLE: an authored MPFB head, real skeletal motion, and facial morph controls. -->
+<!-- DISPOSABLE: Nathang30 head comparison with lightweight authored controls. -->
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stark · 3D face trial</title><link rel="stylesheet" href="style.css"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script></head>
 <body>
 <header><span>MARK III / INTERNAL DISPLAY</span><button id="controlsToggle" aria-expanded="false" aria-controls="trialControls">Trial controls</button></header>
@@ -15,4 +15,4 @@
 <p class="disclaimer">Rough MPFB likeness · move across the face to look around</p>
 <nav class="switcher" aria-label="Lighting variants"><button id="previous" aria-label="Previous lighting">←</button><span id="variantLabel">A / Cinematic</span><button id="next" aria-label="Next lighting">→</button></nav></section>
 <p class="interaction-hint">Move to look around <span>·</span> Press H for controls</p>
-<script type="module" src="viewer.js?v=eye-surface-9"></script></body></html>
+<script type="module">const previous=new URLSearchParams(location.search).get('model')==='mpfb';import(previous?'./viewer.js?v=eye-surface-9':'./nathang30-viewer.js?v=nathan-5');</script></body></html>

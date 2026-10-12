@@ -1,0 +1,18 @@
+{
+  "generated_source": "/Users/rorycollins/.codex/generated_images/01a12eb0-df03-73f2-acd1-71a3df47ad8f/exec-243b876f-77e2-4d54-8b18-4d1bee3a364f.png",
+  "reference": "Front render of user-supplied Nathang30 model",
+  "tool": "image_gen",
+  "edit": "Close both eyelids; preserve pose, framing, likeness, lighting and all other features",
+  "crop_top_origin": [
+    0.3,
+    0.43,
+    0.72,
+    0.66
+  ],
+  "size": [
+    512,
+    280
+  ],
+  "purpose": "Approximate texture blink on the original fitted eye surfaces",
+  "license": "Derivative supplied under CC BY-NC-SA 4.0; see NATHANG30-LICENSE.md"
+}

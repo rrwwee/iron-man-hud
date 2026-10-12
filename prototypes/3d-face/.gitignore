@@ -1,1 +1,4 @@
 scripts/__pycache__/
+source-assets/nathang30/*
+!source-assets/nathang30/README.md
+!source-assets/nathang30/downloads.json
