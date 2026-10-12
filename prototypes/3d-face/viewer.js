@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
 import { drawHUD } from './hud.js';
+import { createEyeSurface } from './eye-surface.js?v=5';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const hologram=$('hologram'),hudContext=hologram.getContext('2d');
@@ -18,6 +19,8 @@ let neutralLighting=new URLSearchParams(location.search).get('variant')==='inspe
 let expression='neutral',expressionMix={},blinkAt=-10,nextBlink=4,tx=0,ty=0,x=0,y=0,gazeX=0,gazeY=0,replayStart=null;
 let blinkClose=.075,blinkHold=.04,blinkOpen=.155,blinkPeak=0;
 let model,head,eyes=[],morphMeshes=[],loaded=false,raf=0,blinkTimer=0,hudDirty=true;
+let photographicEyes,originalEyes;
+const eyeGaze={value:new THREE.Vector2()};
 let elapsed=0,lastFrame=0,renderCount=0;
 const started=performance.now(),rest=new Map(),eyeRestWorld=new Map();
 const expressions={neutral:{},smirk:{mouthSmileLeft:.75,mouthDimpleLeft:.3,browOuterUpRight:.2},surprise:{browInnerUp:.85,browOuterUpLeft:.6,browOuterUpRight:.6,eyeWideLeft:.55,eyeWideRight:.55,jawOpen:.3},skeptical:{browOuterUpRight:.9,browDownLeft:.5,eyeSquintLeft:.3,mouthPressLeft:.4,mouthSmileRight:.16}};
@@ -39,6 +42,7 @@ $('neutralLight').onchange=()=>lighting($('neutralLight').checked);
 $('previous').onclick=$('next').onclick=()=>lighting(!neutralLighting);
 window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='h'&&!e.target.closest('textarea,[contenteditable],input[type=text]')){toggleControls();return;}if(e.key==='Escape'&&!$('trialControls').hidden){toggleControls();return;}if(e.target.closest('input,button'))return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();lighting(!neutralLighting);}});
 $('hudToggle').onchange=()=>document.body.classList.toggle('no-hud',!$('hudToggle').checked);
+$('photoEyes').onchange=()=>{if(photographicEyes){photographicEyes.visible=$('photoEyes').checked;originalEyes.visible=!$('photoEyes').checked;wake();}};
 function chooseExpression(name){expression=name;$('expressionHud').textContent=name.toUpperCase();document.querySelectorAll('[data-expression]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.expression===name)));hudDirty=true;wake();}
 document.querySelectorAll('[data-expression]').forEach(b=>b.onclick=()=>chooseExpression(b.dataset.expression));
 $('blink').onclick=()=>beginBlink();
@@ -92,6 +96,9 @@ outgoingLight *= front*sides*bottom*top;
 new GLTFLoader().load('./assets/tony-head.glb',gltf=>{
   model=gltf.scene;scene.add(model);const bones=[];
   model.traverse(o=>{if(o.isBone){bones.push(o);rest.set(o,o.quaternion.clone());}if(o.isMesh){o.frustumCulled=false;if(o.morphTargetDictionary)morphMeshes.push(o);const materials=Array.isArray(o.material)?o.material:[o.material];materials.forEach(m=>{m.transparent=false;m.opacity=1;m.depthWrite=true;m.roughness=/eyes/i.test(m.name)?.22:.64;m.metalness=0;if(m.map)m.map.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());faceAperture(m);});}});
+  model.traverse(o=>{if(o.isMesh&&/Brown_Eyes/.test(o.material.name))originalEyes=o;});
+  photographicEyes=createEyeSurface(originalEyes,eyeGaze,lidClosure,lidTexture,lidReady);
+  originalEyes.visible=!$('photoEyes').checked;photographicEyes.visible=$('photoEyes').checked;
   head=bones.find(o=>/^head$/i.test(o.name));eyes=bones.filter(o=>/^eye[._]?[LR]$/i.test(o.name));
   model.updateMatrixWorld(true);eyes.forEach(b=>eyeRestWorld.set(b,b.getWorldQuaternion(new THREE.Quaternion())));const aim=head.getWorldPosition(new THREE.Vector3());
   camera.position.set(aim.x,aim.y+.023,aim.z+.48);camera.lookAt(aim.x,aim.y+.003,aim.z);
@@ -131,6 +138,7 @@ function frame(now){
   const goal=expressions[expression],keys=new Set([...Object.keys(expressionMix),...Object.keys(goal)]);let changing=false;
   keys.forEach(k=>{expressionMix[k]=(expressionMix[k]||0)+((goal[k]||0)-(expressionMix[k]||0))*(1-Math.exp(-dt*10));if(Math.abs((goal[k]||0)-expressionMix[k])>.001)changing=true;});
   euler.set(y*.12,x*.21,0);q.setFromEuler(euler);head.quaternion.copy(rest.get(head)).multiply(q);eyes.forEach(b=>aimEye(b,gazeY*.085,gazeX*.14));
+  eyeGaze.value.set(gazeX*.14-x*.21,gazeY*.085-y*.12);
   // A little lid follow softens downward gaze. Blink wins over eye-opening
   // expressions, including surprise, so both lids can actually meet.
   const lidFollow=Math.max(0,gazeY*.085-y*.12)*1.3;
@@ -147,6 +155,7 @@ function frame(now){
   // A read-only DOM diagnostic provides a repeatable idle/render-budget check.
   $('pose').dataset.frames=String(renderCount);$('pose').dataset.pixels=String(renderer.domElement.width*renderer.domElement.height);$('pose').dataset.triangles=String(renderer.info.render.triangles);$('pose').dataset.drawCalls=String(renderer.info.render.calls);$('pose').dataset.active=String(active);
   $('pose').dataset.blink=blink.toFixed(3);$('pose').dataset.blinkPeak=blinkPeak.toFixed(3);$('pose').dataset.gazeYaw=(gazeX*.14*180/Math.PI).toFixed(2);$('pose').dataset.eyeYaw=((gazeX*.14-x*.21)*180/Math.PI).toFixed(2);
+  $('pose').dataset.eyeSurface=photographicEyes.visible?'photographic':'globe';
   if(hudDirty){drawHUD(hudContext,stage.clientWidth,stage.clientHeight,0,0,0,expression);hudDirty=false;}
   if(active)wake();else scheduleBlink();
 }
