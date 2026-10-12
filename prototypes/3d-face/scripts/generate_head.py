@@ -104,9 +104,9 @@ details = {
     "nose-scale-depth-incr": 0.14,
     "nose-width1-decr": 0.10,
     "nose-curve-convex": 0.06,
-    "mouth-upperlip-height-decr": 0.26,
-    "mouth-lowerlip-height-decr": 0.22,
-    "mouth-scale-depth-decr": 0.12,
+    "mouth-upperlip-height-decr": 0.58,
+    "mouth-lowerlip-height-decr": 0.48,
+    "mouth-scale-depth-decr": 0.22,
     "eyebrows-angle-down": 0.10,
 }
 for name, weight in details.items():
@@ -298,6 +298,8 @@ copy_base.name = "TonyInspired_Face"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from reduce_to_face import reduce_to_face
 reduce_to_face(copy_root, copy_base)
+from apply_likeness import apply_likeness
+apply_likeness(copy_root, copy_base, OUT)
 expected = {"eyeBlinkLeft", "eyeBlinkRight", "mouthSmileLeft", "mouthSmileRight", "browInnerUp"}
 names = {k.name for k in copy_base.data.shape_keys.key_blocks}
 if not expected.issubset(names):
@@ -342,7 +344,7 @@ glb_path.write_bytes(struct.pack("<III", 0x46546c67, 2, total) +
 
 summary = {
     "source": "MakeHuman MPFB 2.0.18 + MakeHuman system CC0 assets + CC0 faceunits01",
-    "description": "Rough authored Tony-inspired head, not a scan or validated actor likeness",
+    "description": "Tony-inspired front-face study with generated photographic diffuse projection; not an actor scan",
     "macro": macro, "details": details,
     "bones": [bone.name for bone in copy_root.data.bones],
     "morphs": sorted(names - {"Basis"}),

@@ -1,6 +1,6 @@
 {
   "source": "MakeHuman MPFB 2.0.18 + MakeHuman system CC0 assets + CC0 faceunits01",
-  "description": "Rough authored Tony-inspired head, not a scan or validated actor likeness",
+  "description": "Tony-inspired front-face study with generated photographic diffuse projection; not an actor scan",
   "macro": {
     "gender": 1.0,
     "age": 0.65,
@@ -27,9 +27,9 @@
     "nose-scale-depth-incr": 0.14,
     "nose-width1-decr": 0.1,
     "nose-curve-convex": 0.06,
-    "mouth-upperlip-height-decr": 0.26,
-    "mouth-lowerlip-height-decr": 0.22,
-    "mouth-scale-depth-decr": 0.12,
+    "mouth-upperlip-height-decr": 0.58,
+    "mouth-lowerlip-height-decr": 0.48,
+    "mouth-scale-depth-decr": 0.22,
     "eyebrows-angle-down": 0.1
   },
   "bones": [
@@ -55,18 +55,6 @@
     "mouthSmileRight"
   ],
   "meshes": [
-    {
-      "name": "TonyInspired_Base.eyebrow001_export",
-      "vertices": 124
-    },
-    {
-      "name": "TonyInspired_Base.eyelashes01_export",
-      "vertices": 250
-    },
-    {
-      "name": "TonyInspired_Base.grinsegold_beard_sigmund_wip_export",
-      "vertices": 313
-    },
     {
       "name": "TonyInspired_Base.high-poly_export",
       "vertices": 1064

@@ -1,0 +1,15 @@
+{
+  "origin": "AI-generated with the imagegen tool, using a user-supplied cinematic reference for likeness guidance",
+  "modelAsset": "A new generated portrait; not an actor scan or copied movie frame",
+  "generationDate": "2026-10-12",
+  "sourceDimensions": [
+    1254,
+    1254
+  ],
+  "buildTextureDimensions": [
+    1024,
+    1024
+  ],
+  "conversion": "Blender Image.scale followed by JPEG encoding; original generator output retained outside the repository",
+  "prompt": "Use case: photorealistic-natural.\nAsset type: ONE square 1024x1024 frontal portrait used as a diffuse color projection texture for a lightweight animated 3D face.\nThe supplied image is a LIKENESS REFERENCE ONLY: reproduce the unmistakable facial appearance of Robert Downey Jr as cinematic Tony Stark in the Avengers / Iron Man films, but create a NEW straight-on neutral studio portrait without any HUD, lettering, glow, wounds or helmet. Middle-aged, natural skin pores and small under-eye creases, deep-set brown eyes with slightly hooded upper lids, distinctive brow shape, long defined nose, narrow relaxed CLOSED lips.\nSignature carefully trimmed dark moustache and Tony Stark anchor goatee: individual short hairs, natural patchy density and skin visible between hairs, thin moustache following the upper lip, small clean central philtrum gap, slim connection toward the chin and a neat tapered chin beard. No large solid black beard mass. Fine cheek and jaw stubble. Dark eyebrows with individual visible hairs, not painted solid shapes. Relaxed expression, no smile, no lifted brows, no parted mouth.\nTEXTURE LIGHTING: soft flat balanced white illumination from both sides, cross-polarized diffuse look, no strong baked directional shadows or cinematic color cast, no specular glare. Preserve photographic skin color variation and very fine pores. Background mid-gray. No glasses or accessories.\nCRITICAL ALIGNMENT for texture mapping: perfect frontal orthographic-looking view, head upright, face axis exactly at x=50%. Both ears equally visible. Eyes open, gaze straight into camera. Desired eye pupil centers at x=38% and 62%, y=40%; bottom of nose at y=60%; closed mouth seam centered at y=72%; bottom of chin at y=91%. Face skin outline spans approximately x=18% to 82% at cheekbone height. Top of forehead around y=12%; hairstyle may extend to the top edge, and neck only in the bottom 9%. Keep the whole chin visible.\nPhotographic film-quality likeness and skin detail, not 3D render, not illustration, no beauty smoothing. Single portrait, not a grid. No text, no watermark."
+}

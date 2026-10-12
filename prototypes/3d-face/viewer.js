@@ -51,7 +51,7 @@ outgoingLight *= front*sides*bottom*top;
 #include <opaque_fragment>`);};material.customProgramCacheKey=()=> 'front-face-aperture-v1';}
 new GLTFLoader().load('./assets/tony-head.glb',gltf=>{
   model=gltf.scene;scene.add(model);const bones=[];
-  model.traverse(o=>{if(o.isBone){bones.push(o);rest.set(o,o.quaternion.clone());}if(o.isMesh){o.frustumCulled=false;if(o.morphTargetDictionary)morphMeshes.push(o);const materials=Array.isArray(o.material)?o.material:[o.material];materials.forEach(m=>{m.transparent=false;m.opacity=1;m.depthWrite=true;if(/beard|eyebrow|eyelash/i.test(m.name)){m.alphaTest=.4;m.side=THREE.DoubleSide;}if(/beard/i.test(m.name))m.color.setRGB(.18,.10,.065);m.roughness=.8;faceAperture(m);});}});
+  model.traverse(o=>{if(o.isBone){bones.push(o);rest.set(o,o.quaternion.clone());}if(o.isMesh){o.frustumCulled=false;if(o.morphTargetDictionary)morphMeshes.push(o);const materials=Array.isArray(o.material)?o.material:[o.material];materials.forEach(m=>{m.transparent=false;m.opacity=1;m.depthWrite=true;m.roughness=/eyes/i.test(m.name)?.22:.64;m.metalness=0;if(m.map)m.map.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());faceAperture(m);});}});
   head=bones.find(o=>/^head$/i.test(o.name));eyes=bones.filter(o=>/^eye[._]?[LR]$/i.test(o.name));
   model.updateMatrixWorld(true);const aim=head.getWorldPosition(new THREE.Vector3());
   camera.position.set(aim.x,aim.y+.023,aim.z+.48);camera.lookAt(aim.x,aim.y+.003,aim.z);
