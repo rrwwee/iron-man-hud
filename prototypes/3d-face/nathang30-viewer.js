@@ -1,7 +1,7 @@
 // Disposable candidate: Nathang30 geometry/UVs, authored local expression controls.
 import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
-import { drawHUD } from './hud.js';
+import { createHUDTrial } from './hud-trial.js?v=3';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});
@@ -15,7 +15,7 @@ key.position.set(-.11,1.67,.27);fill.position.set(.12,1.64,.25);scene.add(key,fi
 camera.position.set(0,1.615,.43);camera.lookAt(0,1.612,.01);
 const ctx=$('hologram').getContext('2d');
 const params=new URLSearchParams(location.search);
-let neutralLighting=params.get('variant')==='inspection',expression='neutral',mix={},meshes=[],loaded=false;
+let neutralLighting=params.get('light')==='inspection'||params.get('variant')==='inspection',expression='neutral',mix={},meshes=[],loaded=false;
 let holdBlink=false,tx=0,ty=0,x=0,y=0,gx=0,gy=0,replayStart=null,raf=0,lastFrame=0,frames=0,hudDirty=true;
 let blinkAt=-10,nextBlink=4,blinkClose=.075,blinkHold=.045,blinkOpen=.17,blinkPeak=0,blinkTimer=0,elapsed=0;
 const lidReady={value:0};
@@ -23,7 +23,8 @@ const lidTexture=new THREE.TextureLoader().load('./assets/nathang30-closed-eyes.
 const start=performance.now(),gaze={value:new THREE.Vector2()},closure={value:new THREE.Vector2()};
 const expressions={neutral:{},smirk:{mouthSmileLeft:.85,browOuterUpRight:.2},surprise:{browInnerUp:.85,browOuterUpLeft:.5,browOuterUpRight:.5,jawOpen:.6},skeptical:{browOuterUpRight:.9,browDownLeft:.6,mouthSmileRight:.22}};
 function wake(){if(!raf&&!document.hidden)raf=requestAnimationFrame(frame);}
-function lighting(value){neutralLighting=value;$('neutralLight').checked=value;key.color.set(value?0xffffff:0xffbd99);fill.color.set(value?0xffffff:0x8bcdf7);key.intensity=value?.06:.045;fill.intensity=value?.04:.023;ambient.intensity=value?.35:.02;$('variantLabel').textContent=value?'B / Inspection lighting':'A / Cinematic';const u=new URL(location.href);u.searchParams.set('variant',value?'inspection':'hud');history.replaceState(null,'',u);wake();}
+function lighting(value){neutralLighting=value;$('neutralLight').checked=value;key.color.set(value?0xffffff:0xffbd99);fill.color.set(value?0xffffff:0x8bcdf7);key.intensity=value?.06:.045;fill.intensity=value?.04:.023;ambient.intensity=value?.35:.02;$('variantLabel').textContent=value?'Inspection lighting':'Cinematic lighting';const u=new URL(location.href);if(value)u.searchParams.set('light','inspection');else u.searchParams.delete('light');history.replaceState(null,'',u);wake();}
+const hudTrial=createHUDTrial({wake,invalidate:()=>{hudDirty=true;}});
 function toggleControls(){const p=$('trialControls');p.hidden=!p.hidden;$('controlsToggle').setAttribute('aria-expanded',String(!p.hidden));}
 $('controlsToggle').onclick=toggleControls;
 $('previous').onclick=$('next').onclick=()=>lighting(!neutralLighting);
@@ -35,7 +36,7 @@ $('photoEyes').closest('label').style.display='none';$('relaxedEyes').closest('l
 $('loading').textContent='Loading Nathang30 head…';
 document.querySelector('.disclaimer').innerHTML='Tony Stark by <a href="https://sketchfab.com/3d-models/tony-stark-86c267264a2e4903b8c2bcc1b972cb74" target="_blank" rel="noreferrer">Nathang30</a> · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noreferrer">CC BY-NC-SA 4.0</a><br>Modified head trial · authored expressions · texture-based blink/gaze';
 const comparison=document.createElement('a');comparison.href='?model=mpfb&variant=hud';comparison.textContent='Compare previous MPFB head';comparison.style.cssText='display:block;margin-top:10px;font-size:10px;color:#83b5c0';document.querySelector('.disclaimer').after(comparison);
-window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='h'){toggleControls();return;}if(e.key==='Escape'&&!$('trialControls').hidden)toggleControls();if(e.target.closest('input,button'))return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();lighting(!neutralLighting);}});
+window.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select,[contenteditable]'))return;if(e.key.toLowerCase()==='h'){toggleControls();return;}if(e.key==='Escape'&&!$('trialControls').hidden)toggleControls();});
 function chooseExpression(name){expression=name;$('expressionHud').textContent=name.toUpperCase();document.querySelectorAll('[data-expression]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.expression===name)));hudDirty=true;wake();}
 document.querySelectorAll('[data-expression]').forEach(b=>b.onclick=()=>chooseExpression(b.dataset.expression));
 function beginBlink(automatic=false){clearTimeout(blinkTimer);elapsed=(performance.now()-start)/1000;blinkAt=elapsed;blinkPeak=0;const speed=$('slowBlink').checked?4:1;blinkClose=(.065+Math.random()*.02)*speed;blinkHold=.045*speed;blinkOpen=(.15+Math.random()*.035)*speed;nextBlink=elapsed+(automatic&&Math.random()<.1?.48:3+Math.random()*4);wake();}
@@ -48,7 +49,7 @@ $('center').onclick=()=>{stopReplay();tx=ty=x=y=gx=gy=0;wake();};
 $('replay').onclick=()=>{if(replayStart!==null){stopReplay();wake();return;}replayStart=(performance.now()-start)/1000;$('replay').textContent='Stop replay';wake();};
 stage.addEventListener('pointermove',e=>{if(replayStart!==null)return;const r=stage.getBoundingClientRect();tx=THREE.MathUtils.clamp((e.clientX-r.left)/r.width*2-1,-1,1);ty=THREE.MathUtils.clamp((e.clientY-r.top)/r.height*2-1,-1,1);wake();});
 stage.addEventListener('pointerleave',()=>{if(replayStart===null)tx=ty=0;wake();});
-function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setPixelRatio(Math.min(1,960/w,600/h));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();$('hologram').width=w;$('hologram').height=h;hudDirty=true;wake();}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.min(1,960/w,600/h);renderer.setPixelRatio(scale);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();$('hologram').width=Math.round(w*scale);$('hologram').height=Math.round(h*scale);hudDirty=true;wake();}
 new ResizeObserver(resize).observe(stage);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;clearTimeout(blinkTimer);}else{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;wake();scheduleBlink();}});
 function surface(material,eye){
@@ -125,7 +126,7 @@ function frame(now){
   renderer.render(scene,camera);frames++;
   $('pose').textContent=`Yaw ${(x*35).toFixed(1)}° / pitch ${(-y*7).toFixed(1)}° / ${expression} / ${active?'moving':'idle paused'}`;
   Object.assign($('pose').dataset,{frames:String(frames),pixels:String(renderer.domElement.width*renderer.domElement.height),triangles:String(renderer.info.render.triangles),drawCalls:String(renderer.info.render.calls),active:String(active),blink:Math.max(bl,br).toFixed(3),blinkPeak:blinkPeak.toFixed(3),model:'nathang30',yaw:(x*35).toFixed(1)});
-  if(hudDirty){drawHUD(ctx,stage.clientWidth,stage.clientHeight,0,0,0,expression);hudDirty=false;}
+  if(hudDirty){hudTrial.draw(ctx,$('hologram').width,$('hologram').height,expression);hudDirty=false;}
   if(active)wake();else scheduleBlink();
 }
 resize();lighting(neutralLighting);

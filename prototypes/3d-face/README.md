@@ -4,6 +4,14 @@ Decision: [Validate a free 3D face in motion and expression](https://github.com/
 
 The default is now a reduced **Nathang30 Tony Stark head**, with custom lightweight expression controls. The previous MPFB trial remains available at `?model=mpfb&variant=hud` for comparison. Neither is a finished film asset or a validated final choice.
 
+## Current HUD comparison
+
+The face has been accepted as the working baseline for HUD design. The next open decision compares three graphic treatments on this same route: `?variant=visor` (A, oblique projected optics), `?variant=targeting` (B, restrained brackets and one ocular reticle), and `?variant=diagnostic` (C, signal banks and panoramic telemetry). The bottom comparison bar or left/right keys change the HUD without reloading the face. H still opens the face controls; inspection lighting now uses a separate `light=inspection` parameter.
+
+See [HUD-TRIAL.md](HUD-TRIAL.md) for the design rationale and trial scope. These are visual treatments, with static placeholder readouts; panel interactions have not been implemented. Screenshots are `hud-visor-preview.png`, `hud-targeting-preview.png` and `hud-diagnostic-preview.png`. No variant has been selected yet.
+
+The three variants share one 2D canvas capped to the same 960×600 maximum as the face. It is cached between variant, resize and expression changes, and has no continuous animation loop. No new model, texture, font, dependency or render pass is loaded. Face asset bytes, geometry and three WebGL draw calls are unchanged.
+
 ## Current Nathang30 candidate
 
 The user's two downloads are organised under `source-assets/nathang30/`, with checksums and acquisition notes. The 17,067,128-byte GLB and 39,101,334-byte original ZIP are preserved unchanged and ignored by Git, alongside safely extracted OBJ/textures and the editable `head-trial.blend`. The originals remain local; the small derivative has its own [attribution and license notice](assets/NATHANG30-LICENSE.md).
