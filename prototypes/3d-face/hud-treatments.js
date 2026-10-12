@@ -170,6 +170,6 @@ export const treatments=[
 export function drawTreatment(ctx,w,h,key,expression,options={}){
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);ctx.save();ctx.scale(w/1600,h/800);
   ctx.globalCompositeOperation='source-over';ctx.lineCap='butt';ctx.lineJoin='round';
-  (options.interactive?treatments[0]:(treatments.find(t=>t.key===key)||treatments[0])).draw(ctx,instruments(ctx),expression,options);
+  if(!options.interactive)(treatments.find(t=>t.key===key)||treatments[0]).draw(ctx,instruments(ctx),expression,options);
   ctx.restore();
 }

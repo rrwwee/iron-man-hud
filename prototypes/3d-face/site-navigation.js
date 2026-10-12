@@ -14,23 +14,27 @@ export function createSiteNavigation({wake,invalidate}){
   const stage=document.getElementById('stage'),canvas=document.getElementById('hologram');
   const layer=document.createElement('div');layer.className='hud-follow-layer';stage.insertBefore(layer,canvas);layer.append(canvas);
   const nav=document.createElement('nav');nav.className='radial-menu';nav.dataset.ui='';nav.setAttribute('aria-label','Site sections');
-  nav.innerHTML='<div class="radial-scroll-zone" aria-hidden="true"></div><div class="radial-orbit" aria-hidden="true"></div><div class="radial-core" aria-hidden="true">J<span>ARVIS</span></div><p class="radial-caption">Explore<span>Scroll to browse</span></p><div class="radial-items"></div><output class="radial-position"></output>';
+  nav.innerHTML=`<svg class="navigation-dial" viewBox="0 0 450 560" aria-hidden="false">
+    <defs><linearGradient id="dialStroke" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e1f7ef"/><stop offset=".46" stop-color="#65bcc9"/><stop offset="1" stop-color="#d7924c"/></linearGradient></defs>
+    <g class="dial-machinery" aria-hidden="true"><path d="M60 25 A255 255 0 0 1 60 535 M60 39 A241 241 0 0 1 60 521 M60 62 A218 218 0 0 1 60 498 M60 118 A162 162 0 0 1 60 442"/>
+    <path class="dial-heavy" d="M144 74 A222 222 0 0 1 244 405 M87 499 A221 221 0 0 1 60 501"/>
+    <circle cx="60" cy="280" r="116"/><path d="M-50 280H164 M60 165V395" class="dial-cross"/></g>
+    <g class="dial-ticks" aria-hidden="true"></g><g class="radial-items"></g>
+    <text x="45" y="267" class="dial-caption">INDEX</text><text x="40" y="302" class="dial-selected-number">01</text><text x="45" y="324" class="dial-total">/ 06</text>
+    <text x="58" y="18" class="dial-instruction">SCROLL TO SELECT / CLICK TO OPEN</text>
+  </svg>`;
+  const tickGroup=nav.querySelector('.dial-ticks');
+  for(let i=0;i<=76;i++){const a=(-100+i*200/76)*Math.PI/180,r=i%4===0?230:235;tickGroup.append(svg('path',{d:`M${60+Math.cos(a)*r} ${280+Math.sin(a)*r} L${60+Math.cos(a)*241} ${280+Math.sin(a)*241}`}));}
   layer.append(nav);
-  const ocular=svg('svg',{viewBox:'0 0 80 80','aria-hidden':'true'});ocular.classList.add('ocular-tracker');
+  const ocular=svg('svg',{viewBox:'0 0 80 80','aria-hidden':'true'});ocular.classList.add('ocular-tracker');ocular.dataset.ui='';
+  ocular.setAttribute('role','button');ocular.setAttribute('tabindex','0');ocular.setAttribute('aria-label','Center face');ocular.removeAttribute('aria-hidden');
+  const centerFace=()=>document.dispatchEvent(new CustomEvent('hud-center'));ocular.onclick=centerFace;ocular.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();centerFace();}};ocular.append(svg('title',{}));ocular.querySelector('title').textContent='Center face';
   ocular.append(svg('path',{d:'M8 40 A32 32 0 0 1 65 20 M71 32 A32 32 0 0 1 20 65 M16 40 A24 24 0 0 1 40 16 M40 64 A24 24 0 0 0 64 40 M2 40H11 M69 40H78 M40 2V11 M40 69V78 M35 40H45 M40 35V45'}));layer.append(ocular);
-  const buttons=Array.from({length:5},()=>{const b=document.createElement('button');b.className='radial-item';nav.querySelector('.radial-items').append(b);return b;});
-  const suit=document.createElement('button');suit.className='suit-schematic';suit.dataset.ui='';suit.setAttribute('aria-label','Rotate suit schematic');
-  suit.innerHTML='<span>Mark III</span><small>Suit schematic</small>';const wire=svg('svg',{viewBox:'0 0 150 245','aria-hidden':'true'});
-  const paths=[
-    'M62 12 88 12 96 29 90 48 60 48 54 29Z M60 27 67 23 75 28 83 23 90 27 86 40 64 40Z M61 29 68 30 M82 30 89 29 M70 43 80 43',
-    'M58 53 92 53 106 69 97 106 89 121 61 121 53 106 44 69Z M58 53 64 70 86 70 92 53 M53 106 69 100 81 100 97 106 M61 121 67 107 83 107 89 121 M44 69 59 76 M106 69 91 76',
-    'M44 58 28 63 21 87 34 93 46 79 M106 58 122 63 129 87 116 93 104 79 M25 92 18 122 21 137 32 136 38 112 34 94 M125 92 132 122 129 137 118 136 112 112 116 94 M20 137 17 148 21 154 30 152 33 138 M130 137 133 148 129 154 120 152 117 138',
-    'M60 125 90 125 93 143 83 152 67 152 57 143Z M61 148 56 180 67 188 74 165 76 165 83 188 94 180 89 148 M56 180 53 213 63 226 70 219 68 191 M94 180 97 213 87 226 80 219 82 191 M53 213 45 227 46 234 66 234 70 222 M97 213 105 227 104 234 84 234 80 222',
-    'M58 63 50 76 57 95 68 100 M92 63 100 76 93 95 82 100 M61 130 74 138 89 130 M56 185 66 190 M84 190 94 185 M56 198 66 201 M84 201 94 198',
-  ];
-  const rear=svg('g',{transform:'translate(4,-3)',opacity:'.24'});paths.forEach(d=>rear.append(svg('path',{d})));wire.append(rear);
-  paths.forEach(d=>wire.append(svg('path',{d})));wire.append(svg('circle',{cx:75,cy:84,r:10}));wire.append(svg('path',{d:'M69 79 81 79 75 89Z M62 12 66 9 92 9 M106 69 110 66 M89 121 93 118 M46 234 50 231'}));suit.append(wire);
-  suit.onclick=()=>{suit.classList.toggle('turned');suit.setAttribute('aria-pressed',String(suit.classList.contains('turned')));};layer.append(suit);
+  const buttons=Array.from({length:5},()=>{const b=svg('g',{class:'radial-sector',role:'button',tabindex:'0'});nav.querySelector('.radial-items').append(b);return b;});
+  const preview=document.createElement('button');preview.className='preview-dial';preview.dataset.ui='';
+  preview.innerHTML=`<svg viewBox="0 0 340 340" aria-hidden="true"><defs><linearGradient id="previewStroke" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a0edf4"/><stop offset="1" stop-color="#477986"/></linearGradient></defs><circle cx="170" cy="170" r="154"/><circle cx="170" cy="170" r="141"/><circle class="preview-inner" cx="170" cy="170" r="115"/><g class="preview-ticks"></g><path class="preview-progress"/></svg><span class="preview-type"></span><span class="preview-title"></span><span class="preview-detail"></span><span class="preview-action"></span>`;
+  for(let i=0;i<72;i++){const a=i*Math.PI/36,r=i%6===0?144:148;preview.querySelector('.preview-ticks').append(svg('path',{d:`M${170+Math.cos(a)*r} ${170+Math.sin(a)*r} L${170+Math.cos(a)*154} ${170+Math.sin(a)*154}`}));}
+  layer.append(preview);
 
   const dialog=document.createElement('section');dialog.id='contentPanel';dialog.className='content-panel';dialog.hidden=true;dialog.dataset.ui='';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','contentTitle');
   dialog.innerHTML='<div class="content-panel-head"><div><small id="contentKind"></small><h1 id="contentTitle"></h1></div><button id="closeContent" aria-label="Close content">×</button></div><div id="contentBody" class="content-panel-body"></div><p class="content-sample">Sample content · section names and media are still to be chosen</p>';
@@ -43,20 +47,29 @@ export function createSiteNavigation({wake,invalidate}){
   function refresh(){
     buttons.forEach((button,i)=>{
       const offset=i-2,index=(selected+offset+entries.length)%entries.length,item=entries[index],angle=offset*.49;
-      button.style.setProperty('--dx',String(Math.cos(angle)));button.style.setProperty('--dy',String(Math.sin(angle)));
+      const toPoint=(r,a)=>[60+Math.cos(a)*r,280+Math.sin(a)*r],a=angle-.235,z=angle+.235;
+      const p=toPoint(166,a),q=toPoint(222,a),r=toPoint(222,z),t=toPoint(166,z),label=toPoint(192,angle);
       button.dataset.offset=String(offset);button.dataset.entry=item.id;button.setAttribute('aria-label',`${item.label}, ${item.kind}`);button.setAttribute('aria-current',String(offset===0));
-      button.innerHTML=`<span class="radial-node" aria-hidden="true"></span><span class="radial-label">${item.label}<small>${item.kind}${item.kind==='External'?' ↗':''}</small></span>`;
+      button.innerHTML=`<path class="sector-hit" d="M${p} L${q} A222 222 0 0 1 ${r} L${t} A166 166 0 0 0 ${p}Z"/><path class="sector-accent" d="M${q} A222 222 0 0 1 ${r}"/><g transform="translate(${label}) rotate(${offset*6})"><text class="sector-label" text-anchor="middle" y="-3">${item.label}</text><text class="sector-type" text-anchor="middle" y="16">${item.kind==='External'?'OPEN LINK ↗':item.kind.toUpperCase()}</text></g>`;
+      button.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();button.onclick();}};
       button.onclick=()=>{selected=index;refresh();open(item,buttons.find(b=>b.dataset.entry===item.id));};
     });
-    nav.querySelector('.radial-position').textContent=`${String(selected+1).padStart(2,'0')} / ${String(entries.length).padStart(2,'0')}`;
-    nav.dataset.selected=entries[selected].id;
+    nav.querySelector('.dial-selected-number').textContent=String(selected+1).padStart(2,'0');
+    const current=entries[selected];nav.dataset.selected=current.id;
+    preview.setAttribute('aria-label',`Open ${current.label}`);preview.querySelector('.preview-type').textContent=current.kind==='External'?'EXTERNAL LINK':current.kind.toUpperCase()+' PANEL';
+    preview.querySelector('.preview-title').textContent=current.label;
+    preview.querySelector('.preview-detail').textContent=current.kind==='Video'?'Sample clip · 5 sec':current.kind==='Audio'?'Sample audio · 1 sec':current.href?'github.com':`${current.paragraphs.join(' ').split(/\s+/).length} words · sample`;
+    preview.querySelector('.preview-action').textContent=current.kind==='Video'?'▶  OPEN VIDEO':current.kind==='Audio'?'▷  OPEN PLAYER':current.href?'↗  VISIT SITE':'OPEN TRANSMISSION';
+    const end=-Math.PI/2+Math.min(.9999,(selected+1)/entries.length)*2*Math.PI;
+    preview.querySelector('.preview-progress').setAttribute('d',`M170 16 A154 154 0 ${selected>=3?1:0} 1 ${170+Math.cos(end)*154} ${170+Math.sin(end)*154}`);
+    preview.onclick=()=>open(current,buttons.find(b=>b.dataset.entry===current.id));
   }
   function rotate(delta){selected=(selected+delta+entries.length)%entries.length;refresh();}
   nav.addEventListener('wheel',event=>{event.preventDefault();const now=performance.now();if(Math.abs(event.deltaY)<2||now-lastWheel<160)return;lastWheel=now;rotate(Math.sign(event.deltaY));},{passive:false});
   function setPose(x,y,eye){
     eye=eye||lastPose[2];lastPose=[x,y,eye];const strength=active&&!modal?({fixed:0,subtle:1,close:2.6}[follow]):0;
     const transform=`translate3d(${(x*16*strength).toFixed(1)}px,${(y*9*strength).toFixed(1)}px,0) rotate(${(x*.5*strength).toFixed(2)}deg)`;
-    if(transform!==lastTransform){canvas.style.transform=transform;nav.style.transform=`translate3d(${(x*8*strength).toFixed(1)}px,${(y*4*strength).toFixed(1)}px,0)`;suit.style.transform=`translate3d(${(x*3*strength).toFixed(1)}px,${(y*2*strength).toFixed(1)}px,0)`;lastTransform=transform;layer.dataset.poseUpdates=String(Number(layer.dataset.poseUpdates||0)+1);}
+    if(transform!==lastTransform){canvas.style.transform=transform;nav.style.transform=`translate3d(${(x*8*strength).toFixed(1)}px,${(y*4*strength).toFixed(1)}px,0)`;preview.style.transform=`translate3d(${(x*13*strength).toFixed(1)}px,${(y*8*strength).toFixed(1)}px,0)`;lastTransform=transform;layer.dataset.poseUpdates=String(Number(layer.dataset.poseUpdates||0)+1);}
     if(eye){const gain=strength===0?0:Math.min(1,strength*.45),ex=eye.restX+(eye.x-eye.restX)*gain,ey=eye.restY+(eye.y-eye.restY)*gain;
       ocular.style.transform=`translate3d(${(ex-36).toFixed(1)}px,${(ey-36).toFixed(1)}px,0)`;}
     layer.dataset.follow=follow;
@@ -107,7 +120,7 @@ export function createSiteNavigation({wake,invalidate}){
   });
   nav.tabIndex=0;
   function setActive(value){
-    active=value;nav.hidden=suit.hidden=!active;ocular.style.display=active?'':'none';document.body.dataset.navigation=active?'radial':'visual';followControl.closest('label').hidden=!active;
+    active=value;nav.hidden=preview.hidden=!active;ocular.style.display=active?'':'none';document.body.dataset.navigation=active?'radial':'visual';followControl.closest('label').hidden=!active;
     modeButton.textContent=active?'Visuals only':'Try the menu';if(!active&&opened)close();setPose(...lastPose);invalidate();wake();
   }
   modeButton.onclick=()=>{setActive(!active);const u=new URL(location.href);u.searchParams.set('mode',active?'menu':'visual');history.replaceState(null,'',u);};

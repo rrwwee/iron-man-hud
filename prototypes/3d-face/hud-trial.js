@@ -1,5 +1,5 @@
-import {treatments,drawTreatment} from './hud-treatments.js?v=menu-3';
-import {createSiteNavigation} from './site-navigation.js?v=5';
+import {treatments,drawTreatment} from './hud-treatments.js?v=instruments-2';
+import {createSiteNavigation} from './site-navigation.js?v=7';
 
 export function createHUDTrial({wake,invalidate}){
   const params=new URLSearchParams(location.search);
