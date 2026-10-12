@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- THROWAWAY: compare nearest poses, blended poses, and a still control using one generated sprite sheet. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tony Stark · face treatment trial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header><div><span class="eyebrow">IRON MAN HUD / DISPOSABLE PROTOTYPE</span><h1>Does the face stay convincing when it turns?</h1></div><span class="tag">GENERATED IMAGERY</span></header>
+  <p class="intro">Move across the test area, or replay the same motion in both views. Watch the eyes, nose and jaw as you cross between poses.</p>
+  <div class="controls">
+    <button id="replay">Replay motion</button><button id="center">Center</button>
+    <label>Turn range <select id="range"><option value="1">Wide · all poses</option><option value="0.5">Small · inner poses</option></select></label>
+    <label><input type="checkbox" id="hud" checked> HUD overlay</label>
+    <label><input type="checkbox" id="idle"> Idle motion</label>
+    <label><input type="checkbox" id="freeze"> Freeze</label>
+  </div>
+  <main id="stage" aria-label="Move the pointer here to turn both faces">
+    <section class="view" id="cutView"><div class="view-heading"><b>A / Direct poses</b><span>Crisp frames · visible steps</span></div><div class="portrait"><canvas id="cut" width="640" height="640"></canvas><div class="hud"><i class="ring"></i><span class="hud-left">STARK<br>OPTICAL<br>LINK</span><span class="hud-right">VISUAL<br>TRACKING<br>ACTIVE</span><div class="crosshair"></div></div></div><output id="cutState"></output></section>
+    <section class="view" id="blendView"><div class="view-heading"><b>B / Blended poses</b><span>Smooth transitions · possible double features</span></div><div class="portrait"><canvas id="blend" width="640" height="640"></canvas><div class="hud"><i class="ring"></i><span class="hud-left">STARK<br>OPTICAL<br>LINK</span><span class="hud-right">VISUAL<br>TRACKING<br>ACTIVE</span><div class="crosshair"></div></div></div><output id="blendState"></output></section>
+    <section class="view" id="stillView" hidden><div class="view-heading"><b>C / Still + parallax control</b><span>One portrait translates · no actual head turn</span></div><div class="portrait"><canvas id="still" width="640" height="640"></canvas><div class="hud"><i class="ring"></i><span class="hud-left">STARK<br>OPTICAL<br>LINK</span><span class="hud-right">STILL<br>REFERENCE<br>CONTROL</span><div class="crosshair"></div></div></div><output id="stillState"></output></section>
+    <div id="loading">Generating the impression, loading the poses…</div>
+  </main>
+  <div class="readouts"><output id="target">Target: center</output><span id="mode">Pointer control</span></div>
+  <p class="limits">15 generated poses, not film footage or a 3D rig. Pose angles are approximate. Eyes are baked into each image; independent gaze and blinking are not tested. Blending combines images rather than reconstructing a face.</p>
+  <details><summary>Inspect the source poses</summary><p>Left → right: head turns left to right. Top → bottom: up, level, down. Differences in identity or framing originate here.</p><img src="assets/tony-pose-sheet.png" alt="Generated five-column, three-row Tony Stark pose sheet"></details>
+  <nav class="switcher" aria-label="Comparison variants"><button id="previous" aria-label="Previous variant">←</button><span id="variantLabel"></span><button id="next" aria-label="Next variant">→</button></nav>
+  <script src="trial.js"></script>
+</body>
+</html>
