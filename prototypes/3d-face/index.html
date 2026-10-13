@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- DISPOSABLE: Nathang30 head comparison with lightweight authored controls. -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stark · HUD navigation trial</title><link rel="stylesheet" href="style.css?v=targeting-2"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script></head>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stark · HUD navigation trial</title><link rel="stylesheet" href="style.css?v=surface-4"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script></head>
 <body>
 <header><span>MARK III / INTERNAL DISPLAY</span><button id="controlsToggle" aria-expanded="false" aria-controls="trialControls">Trial controls</button></header>
 <main id="stage" aria-label="Move the pointer over the scene to turn the head">
@@ -19,4 +19,4 @@
   <div class="hud-choice-copy"><span>HUD visual trial</span><output id="hudCurrent" aria-live="polite">A / Visor projection</output><small id="hudDescription">Layered optics · cyan + amber</small></div>
   <div class="hud-choice-buttons"><button id="hudPrevious" aria-label="Previous HUD treatment">←</button><button data-treatment="visor" aria-pressed="true">A <span>Visor</span></button><button data-treatment="targeting" aria-pressed="false">B <span>Targeting</span></button><button data-treatment="diagnostic" aria-pressed="false">C <span>Diagnostic</span></button><button id="hudNext" aria-label="Next HUD treatment">→</button><label class="follow-label">HUD follow <select id="hudFollow" aria-label="HUD follow strength"><option value="fixed">Fixed</option><option value="subtle" selected>Subtle</option><option value="close">Stronger</option></select></label><button id="hudMode">Visuals only</button></div>
 </aside>
-<script type="module">const previous=new URLSearchParams(location.search).get('model')==='mpfb';import(previous?'./viewer.js?v=eye-surface-9':'./nathang30-viewer.js?v=targeting-2');</script></body></html>
+<script type="module">const previous=new URLSearchParams(location.search).get('model')==='mpfb';import(previous?'./viewer.js?v=eye-surface-9':'./nathang30-viewer.js?v=surface-4');</script></body></html>

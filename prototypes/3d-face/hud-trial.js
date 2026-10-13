@@ -1,5 +1,5 @@
-import {treatments,drawTreatment} from './hud-treatments.js?v=targeting-2';
-import {createSiteNavigation} from './site-navigation.js?v=targeting-2';
+import {treatments,drawTreatment} from './hud-treatments.js?v=surface-4';
+import {createSiteNavigation} from './site-navigation.js?v=surface-4';
 
 export function createHUDTrial({wake,invalidate,scene,camera}){
   const params=new URLSearchParams(location.search);
@@ -28,7 +28,7 @@ export function createHUDTrial({wake,invalidate,scene,camera}){
     if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();cycle(e.key==='ArrowLeft'?-1:1);}
   });
   select(key);
-  return {setPose:(x,y,eye)=>navigation.setPose(x,y,eye),setVisible:value=>navigation.setVisible(value),get isHovering(){return navigation.isHovering;},get isOpen(){return navigation.isOpen;},draw(ctx,w,h,expression){drawTreatment(ctx,w,h,key,expression,{interactive:navigation.active});draws++;
+  return {setPose:(x,y,eye)=>navigation.setPose(x,y,eye),setVisible:value=>navigation.setVisible(value),get isHovering(){return navigation.isHovering;},get needsFrame(){return navigation.needsFrame;},get isOpen(){return navigation.isOpen;},draw(ctx,w,h,expression){drawTreatment(ctx,w,h,key,expression,{interactive:navigation.active});draws++;
     const current=treatments.find(t=>t.key===key);
     document.getElementById('hudCurrent').textContent=navigation.active?(navigation.isSpatial?'Curved 3D navigation':'Flat radial navigation'):`${current.letter} / ${current.name}`;
     document.getElementById('hudDescription').textContent=navigation.active?(navigation.isSpatial?'Live tracking · hover to highlight · click to open':'Scroll to browse · click to open'):current.description;

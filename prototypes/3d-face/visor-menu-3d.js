@@ -39,7 +39,7 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   const cx=62,cy=320,step=.48;
   const colors={cyan:'#a3e7f0',dim:'#548793',white:'#e0faff',amber:'#f2c18f'};
   const kinds=['Text','Video','Audio','External'],glyphs={Text:'T',Video:'▶',Audio:'♫',External:'↗'};
-  const itemDetail=item=>item.paragraphs?`${item.paragraphs.join(' ').split(/\s+/).length} words`:item.kind==='Video'?'5 sec':item.kind==='Audio'?'1.1 sec':'github.com';
+  const itemDetail=item=>item.paragraphs?`${(item.html?item.html.replace(/<[^>]*>/g,' '):item.paragraphs.join(' ')).trim().split(/\s+/).length} words`:item.kind==='Video'?'5 sec':item.kind==='Audio'?'1.1 sec':'github.com';
   function stroke(ctx,color,width,draw,glow=0){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.shadowColor=color;ctx.shadowBlur=glow;ctx.beginPath();draw(ctx);ctx.stroke();ctx.restore();}
   function arc(ctx,x,y,r,a,b,color,width=1,glow=0){stroke(ctx,color,width,c=>c.arc(x,y,r,a,b),glow);}
   function text(ctx,value,x,y,size,color,align='left'){ctx.save();ctx.textAlign=align;ctx.fillStyle=color;ctx.font=`${size}px Arial, sans-serif`;ctx.fillText(value,x,y);ctx.restore();}
@@ -133,7 +133,7 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     if(!enabled||!visible||blocked)return null;
     const r=stage.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,1-(y-r.top)/r.height*2);
     camera.updateMatrixWorld();ray.setFromCamera(pointer,camera);group.updateMatrixWorld(true);
-    for(const hit of ray.intersectObjects(sheets.map(s=>s.mesh))){
+    for(const hit of ray.intersectObjects(sheets.map(s=>s.mesh).filter(mesh=>mesh.visible))){
       if(hit.object===channels.mesh){
         const x=hit.uv.x*512,y=(1-hit.uv.y)*320;
         if(x>=240&&x<=490&&y>=50&&y<286)return `kind:${kinds[Math.floor((y-50)/59)]}`;
@@ -185,10 +185,17 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
       camera.updateMatrixWorld();group.rotation.set(y*.12*gain,x*.61*gain,0,'YXZ');group.updateMatrixWorld(true);
       if(blocked)setHover(null);else if(mouse)setHover(hitAt(...mouse));
       // Readable debug state for inspecting the actual projected targets and workload.
-      stage.dataset.hudYaw=(x*35*gain).toFixed(1);stage.dataset.hudFollowGain=String(gain);stage.dataset.hudDrawCalls=String(group.visible?4:0);stage.dataset.hudTriangles='194';stage.dataset.hudTextureBytes=String((512*640+512*512+512*320)*4);
+      stage.dataset.hudYaw=(x*35*gain).toFixed(1);stage.dataset.hudFollowGain=String(gain);stage.dataset.hudDrawCalls=String(group.visible?sheets.filter(s=>s.mesh.visible).length+1:0);stage.dataset.hudTriangles=String(group.visible?sheets.filter(s=>s.mesh.visible).length*64+2:0);stage.dataset.hudTextureBytes=String((512*640+512*512+512*320)*4);
       stage.dataset.hudTargets=JSON.stringify(Array.from({length:5},(_,slot)=>{const a=(slot-2)*step;return {...project(cx+Math.cos(a)*236,cy+Math.sin(a)*236,left),slot,label:state?.entries[(state.selected+slot-2+state.entries.length)%state.entries.length].label};}).concat({...project(256,256,right),slot:'preview',label:state?.entries[state.selected].label}));
       stage.dataset.hudChannelTargets=JSON.stringify(kinds.map((kind,i)=>({...project(350,78+i*59,channels),target:`kind:${kind}`})));
       stage.dataset.hudJumpTargets=JSON.stringify((state?.entries||[]).map((item,i)=>{const a=-Math.PI/2+(i+.5)*Math.PI*2/state.entries.length;return {...project(256+Math.cos(a)*221,256+Math.sin(a)*221,right),target:`jump:${i}`,label:item.label};}));
+    },
+    get frame(){return group.matrixWorld;},
+    setContentOpen(value){right.mesh.visible=!value;wake();},
+    contentAnchor(which){
+      const s=which==='preview'?right:left,px=which==='preview'?256:cx+236,py=which==='preview'?256:cy;
+      const xx=THREE.MathUtils.lerp(s.bounds[0],s.bounds[1],px/s.canvas.width),yy=THREE.MathUtils.lerp(s.bounds[3],s.bounds[2],py/s.canvas.height);
+      return new THREE.Vector3(xx,yy-1.619,.14+Math.sqrt(.225*.225-xx*xx)-.225-.025);
     },
     get hovering(){return hover!==null;},
   };

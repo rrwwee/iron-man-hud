@@ -6,6 +6,8 @@ The default is now a reduced **Nathang30 Tony Stark head**, with custom lightwei
 
 ## Current HUD comparison
 
+The latest [content surface trial](HUD-CONTENT-TRIAL.md) opens native video, autoplaying waveform audio and scrollable HTML in a plane projected by the HUD camera. It replaces the separate modal on the current 3D route.
+
 The current interaction pass is [the curved 3D HUD trial](CURVED-HUD-TRIAL.md), at `?variant=visor&mode=menu&hudSpace=curved`. Its three lightweight surfaces share the Face renderer and use raycast hover/click controls. Format browsing, content previews and direct-selection rings add functional detail; hovering no longer freezes movement. **Compare flat HUD** returns to the preceding SVG treatment. Text/video Panels, compact audio and an external link still use sample content. The drawn suit has been removed; a real source mesh is pending. The original A/B/C comparison remains available through **Visuals only** or `mode=visual`.
 
 The face has been accepted as the working baseline for HUD design. The next open decision compares three graphic treatments on this same route with `mode=visual`: `variant=visor` (A, oblique projected optics), `variant=targeting` (B, restrained brackets and one ocular reticle), and `variant=diagnostic` (C, signal banks and panoramic telemetry). The bottom comparison bar or left/right keys change the HUD without reloading the face. H still opens the face controls; inspection lighting now uses a separate `light=inspection` parameter.

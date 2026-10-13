@@ -1,11 +1,12 @@
-import {createVisorMenu} from './visor-menu-3d.js?v=targeting-2';
+import {createHUDContentSurface} from './hud-content-surface.js?v=surface-4';
+import {createVisorMenu} from './visor-menu-3d.js?v=surface-4';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
   {id:'about',label:'About',kind:'Text',title:'A little about me',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
   {id:'work',label:'Selected work',kind:'Text',title:'Selected work',paragraphs:['A place for two or three things you have made, with a short description and links to explore them.','These are sample sections, not a finished content plan. We can replace this Panel with project previews or individual pages once you choose what belongs here.']},
   {id:'video',label:'Watch',kind:'Video',title:'Video sample'},
   {id:'audio',label:'Listen',kind:'Audio',title:'Audio sample'},
-  {id:'notes',label:'Notes',kind:'Text',title:'Notes and ideas',paragraphs:['Short writing can live here without sending visitors out of the scene. A longer piece could have its own scrollable Panel.','For now, this is sample text so you can judge the reading width, contrast, and how much of the Face remains visible.']},
+  {id:'notes',label:'Notes',kind:'Text',title:'Notes and ideas',html:'<h1>Notes and ideas</h1><p>A small collection of experiments in motion, sound and interfaces.</p><h2>Start with the interaction</h2><p>A useful prototype makes a question tangible. Move around, open something, and notice what feels natural.</p><blockquote>Good details make the important action easier to understand.</blockquote><h2>Working notes</h2><ul><li>Keep the face visible around the content.</li><li>Let sound and motion respond to an action.</li><li>Leave room for reading.</li></ul><h2>Next experiments</h2><p>Try a different rhythm, a quieter transition, or a simpler route through the material.</p><p><a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">Explore the project source</a></p>',paragraphs:['Short writing can live here without sending visitors out of the scene. A longer piece could have its own scrollable Panel.','For now, this is sample text so you can judge the reading width, contrast, and how much of the Face remains visible.']},
   {id:'source',label:'Source code',kind:'External',href:'https://github.com/rrwwee/iron-man-hud'},
 ];
 const svgNS='http://www.w3.org/2000/svg';
@@ -41,7 +42,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   dialog.innerHTML='<div class="content-panel-head"><div><small id="contentKind"></small><h1 id="contentTitle"></h1></div><button id="closeContent" aria-label="Close content">×</button></div><div id="contentBody" class="content-panel-body"></div><p class="content-sample">Sample content · section names and media are still to be chosen</p>';
   stage.append(dialog);
   let selected=0,active=true,opened=null,modal=false,previousFocus=null,lastWheel=0,follow='subtle',lastTransform='',lastPose=[0,0];
-  let spatial=null,accessibleShortcuts=null,spatialMode=!!scene&&new URLSearchParams(location.search).get('hudSpace')!=='flat';
+  let contentSurface=null,spatial=null,accessibleShortcuts=null,spatialMode=!!scene&&new URLSearchParams(location.search).get('hudSpace')!=='flat';
   const followControl=document.getElementById('hudFollow');
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){follow='fixed';followControl.value='fixed';}
   const modeButton=document.getElementById('hudMode');
@@ -60,7 +61,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     const current=entries[selected];nav.dataset.selected=current.id;
     preview.setAttribute('aria-label',`Open ${current.label}`);preview.querySelector('.preview-type').textContent=current.kind==='External'?'EXTERNAL LINK':current.kind.toUpperCase()+' PANEL';
     preview.querySelector('.preview-title').textContent=current.label;
-    preview.querySelector('.preview-detail').textContent=current.kind==='Video'?'Sample clip · 5 sec':current.kind==='Audio'?'Sample audio · 1 sec':current.href?'github.com':`${current.paragraphs.join(' ').split(/\s+/).length} words · sample`;
+    preview.querySelector('.preview-detail').textContent=current.kind==='Video'?'Sample clip · 5 sec':current.kind==='Audio'?'Sample audio · 1 sec':current.href?'github.com':`${(current.html?current.html.replace(/<[^>]*>/g,' '):current.paragraphs.join(' ')).trim().split(/\s+/).length} words · sample`;
     preview.querySelector('.preview-action').textContent=current.kind==='Video'?'▶  OPEN VIDEO':current.kind==='Audio'?'▷  OPEN PLAYER':current.href?'↗  VISIT SITE':'OPEN TRANSMISSION';
     const end=-Math.PI/2+Math.min(.9999,(selected+1)/entries.length)*2*Math.PI;
     preview.querySelector('.preview-progress').setAttribute('d',`M170 16 A154 154 0 ${selected>=3?1:0} 1 ${170+Math.cos(end)*154} ${170+Math.sin(end)*154}`);
@@ -77,15 +78,17 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     if(eye){const gain=strength===0?0:Math.min(1,strength*.45),ex=eye.restX+(eye.x-eye.restX)*gain,ey=eye.restY+(eye.y-eye.restY)*gain;
       ocular.style.transform=`translate3d(${(ex-36).toFixed(1)}px,${(ey-36).toFixed(1)}px,0)`;}
     spatial?.setEnabled(active&&spatialMode);spatial?.setPose(x,y,strength,modal);
-    layer.dataset.follow=follow;
+    contentSurface?.tick();layer.dataset.follow=follow;
   }
   function close(){
+    if(contentSurface?.isOpen){contentSurface.close();return;}
     dialog.querySelectorAll('video,audio').forEach(media=>media.pause());dialog.hidden=true;opened=null;modal=false;document.body.classList.remove('panel-open','audio-open');
     layer.inert=false;document.getElementById('hudComparison').inert=false;document.querySelector('header').inert=false;dialog.querySelector('#contentBody').replaceChildren();
     setPose(...lastPose);previousFocus?.focus();document.dispatchEvent(new CustomEvent('hud-panel',{detail:{open:false}}));
   }
-  function open(item,button){
+  function open(item,button,origin='menu'){
     if(item.href){window.open(item.href,'_blank','noopener,noreferrer');return;}
+    if(contentSurface){previousFocus=button||document.activeElement;opened=item.id;spatial.setContentOpen(true);contentSurface.open(item,spatial.contentAnchor(origin));return;}
     dialog.querySelectorAll('video,audio').forEach(media=>media.pause());
     previousFocus=button||document.activeElement;opened=item.id;modal=item.kind!=='Audio';dialog.hidden=false;dialog.dataset.kind=item.kind.toLowerCase();dialog.setAttribute('aria-modal',String(modal));
     dialog.querySelector('#contentTitle').textContent=item.title;dialog.querySelector('#contentKind').textContent=item.kind==='Audio'?'Small audio Panel':item.kind+' Panel';
@@ -119,7 +122,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     }
   });
   window.addEventListener('keydown',e=>{
-    if(!active||modal||e.target.closest('input,select,textarea,audio,video,[contenteditable]'))return;
+    if(!active||modal||e.target.closest('input,select,textarea,audio,video,[contenteditable],#hudContent'))return;
     if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();rotate(e.key==='ArrowUp'?-1:1);}
     if(e.key==='Enter'&&e.target===nav){e.preventDefault();open(entries[selected],nav);}
   });
@@ -138,9 +141,10 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
       }
       if(typeof slot==='string'&&slot.startsWith('jump:')){selected=Number(slot.slice(5));refresh();return;}
       const index=slot==='preview'?selected:(selected+slot-2+entries.length)%entries.length;
-      selected=index;refresh();open(entries[index],buttons.find(b=>b.dataset.entry===entries[index].id));
+      selected=index;refresh();open(entries[index],buttons.find(b=>b.dataset.entry===entries[index].id),slot==='preview'?'preview':'menu');
     }
     spatial=createVisorMenu({scene,camera,stage,wake,onBrowse:browse,onChoose:chooseTarget});
+    contentSurface=createHUDContentSurface({stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);previousFocus?.focus();}});
     accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.setAttribute('aria-label','Preview and format shortcuts');layer.append(accessibleShortcuts);
     [...entries.map((e,i)=>[`jump:${i}`,`Preview ${e.label}`]),...['Text','Video','Audio','External'].map(kind=>[`kind:${kind}`,`Browse ${kind==='External'?'links':kind}`])].forEach(([key,label])=>{
       const b=document.createElement('button');b.textContent=label;b.onclick=()=>chooseTarget(key);b.onfocus=()=>spatial.focus(key);b.onblur=()=>spatial.focus(null);accessibleShortcuts.append(b);
@@ -152,5 +156,5 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     preview.addEventListener('focus',()=>spatial.focus('preview'));preview.addEventListener('blur',()=>spatial.focus(null));setDepth(spatialMode);
   }
   refresh();setActive(new URLSearchParams(location.search).get('mode')!=='visual');
-  return {setPose,setVisible:value=>spatial?.setVisible(value),get isSpatial(){return spatialMode;},get isHovering(){return spatialMode&&spatial?.hovering;},get active(){return active;},get isOpen(){return modal;}};
+  return {setPose,get needsFrame(){return !!contentSurface?.needsFrame;},setVisible:value=>{spatial?.setVisible(value);if(!value&&contentSurface?.isOpen)contentSurface.close();},get isSpatial(){return spatialMode;},get isHovering(){return spatialMode&&spatial?.hovering;},get active(){return active;},get isOpen(){return modal;}};
 }

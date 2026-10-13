@@ -1,7 +1,7 @@
 // Disposable candidate: Nathang30 geometry/UVs, authored local expression controls.
 import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
-import { createHUDTrial } from './hud-trial.js?v=targeting-2';
+import { createHUDTrial } from './hud-trial.js?v=surface-4';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});
@@ -133,7 +133,7 @@ function frame(now){
   const goal=expressions[expression];let changing=false;
   new Set([...Object.keys(mix),...Object.keys(goal)]).forEach(k=>{mix[k]=(mix[k]||0)+((goal[k]||0)-(mix[k]||0))*(1-Math.exp(-dt*10));if(Math.abs((goal[k]||0)-mix[k])>.001)changing=true;});
   meshes.forEach(m=>{if(m.morphTargetDictionary)Object.entries(m.morphTargetDictionary).forEach(([name,i])=>m.morphTargetInfluences[i]=name==='eyeBlinkLeft'?bl:name==='eyeBlinkRight'?br:mix[name]||0);});
-  const active=Math.abs(tx-x)>.0003||Math.abs(ty-y)>.0003||Math.abs(tx-gx)>.0003||Math.abs(ty-gy)>.0003||changing||(age>=0&&age<blinkClose+blinkHold+blinkOpen+.006)||replayStart!==null;
+  const active=Math.abs(tx-x)>.0003||Math.abs(ty-y)>.0003||Math.abs(tx-gx)>.0003||Math.abs(ty-gy)>.0003||changing||(age>=0&&age<blinkClose+blinkHold+blinkOpen+.006)||replayStart!==null||hudTrial.needsFrame;
   renderer.render(scene,camera);frames++;
   $('pose').textContent=`Yaw ${(x*35).toFixed(1)}° / pitch ${(-y*7).toFixed(1)}° / ${expression} / ${active?'moving':'idle paused'}`;
   Object.assign($('pose').dataset,{frames:String(frames),pixels:String(renderer.domElement.width*renderer.domElement.height),triangles:String(renderer.info.render.triangles),drawCalls:String(renderer.info.render.calls),active:String(active),blink:Math.max(bl,br).toFixed(3),blinkPeak:blinkPeak.toFixed(3),model:'nathang30',yaw:(x*35).toFixed(1)});

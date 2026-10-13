@@ -1,5 +1,7 @@
 # Curved HUD — disposable depth and interaction trial
 
+Content opening is superseded by the [HUD content surface trial](HUD-CONTENT-TRIAL.md); the modal descriptions below record the preceding experiment.
+
 Question: does a lightweight visor in the Face's 3D scene feel more like the film references while remaining comfortable to point at and click?
 
 Part of [Choose how HUD panels open and coexist with the face](https://github.com/rrwwee/iron-man-hud/issues/5). Visual acceptance remains open.
