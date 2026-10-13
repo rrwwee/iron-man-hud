@@ -1,7 +1,7 @@
 // Disposable candidate: Nathang30 geometry/UVs, authored local expression controls.
 import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
-import { createHUDTrial } from './hud-trial.js?v=purpose-3';
+import { createHUDTrial } from './hud-trial.js?v=volume-5';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});
@@ -15,8 +15,8 @@ key.position.set(-.11,1.67,.27);fill.position.set(.12,1.64,.25);scene.add(key,fi
 camera.position.set(0,1.615,.43);camera.lookAt(0,1.612,.01);
 const ctx=$('hologram').getContext('2d');
 const params=new URLSearchParams(location.search);
-let wideMotion=params.get('motion')==='wide',pointerX=0,pointerY=0;
-let neutralLighting=params.get('light')==='inspection'||params.get('variant')==='inspection',expression='neutral',mix={},meshes=[],loaded=false;
+let wideMotion=false,pointerX=0,pointerY=0;
+let neutralLighting=false,expression='neutral',mix={},meshes=[],loaded=false;
 let holdBlink=false,tx=0,ty=0,x=0,y=0,gx=0,gy=0,replayStart=null,raf=0,lastFrame=0,frames=0,hudDirty=true;
 let blinkAt=-10,nextBlink=4,blinkClose=.075,blinkHold=.045,blinkOpen=.17,blinkPeak=0,blinkTimer=0,elapsed=0;
 const lidReady={value:0};
@@ -24,13 +24,14 @@ const lidTexture=new THREE.TextureLoader().load('./assets/nathang30-closed-eyes.
 const start=performance.now(),gaze={value:new THREE.Vector2()},closure={value:new THREE.Vector2()};
 const expressions={neutral:{},smirk:{mouthSmileLeft:.85,browOuterUpRight:.2},surprise:{browInnerUp:.85,browOuterUpLeft:.5,browOuterUpRight:.5,jawOpen:.6},skeptical:{browOuterUpRight:.9,browDownLeft:.6,mouthSmileRight:.22}};
 function wake(){if(!raf&&!document.hidden)raf=requestAnimationFrame(frame);}
-function lighting(value){neutralLighting=value;$('neutralLight').checked=value;key.color.set(value?0xffffff:0xffbd99);fill.color.set(value?0xffffff:0x8bcdf7);key.intensity=value?.06:.045;fill.intensity=value?.04:.023;ambient.intensity=value?.35:.02;$('variantLabel').textContent=value?'Inspection lighting':'Cinematic lighting';const u=new URL(location.href);if(value)u.searchParams.set('light','inspection');else u.searchParams.delete('light');history.replaceState(null,'',u);wake();}
+function lighting(value){value=false;neutralLighting=value;$('neutralLight').checked=value;key.color.set(value?0xffffff:0xffbd99);fill.color.set(value?0xffffff:0x8bcdf7);key.intensity=value?.06:.045;fill.intensity=value?.04:.023;ambient.intensity=value?.35:.02;$('variantLabel').textContent=value?'Inspection lighting':'Cinematic lighting';const u=new URL(location.href);if(value)u.searchParams.set('light','inspection');else u.searchParams.delete('light');history.replaceState(null,'',u);wake();}
 const hudTrial=createHUDTrial({scene,camera,wake,invalidate:()=>{hudDirty=true;}});
 const motionLabel=document.createElement('label');motionLabel.className='motion-label';motionLabel.innerHTML='<span>Pointer turns</span><select aria-label="Pointer turn range"><option value="gentle">Gentle · easier targeting</option><option value="wide">Wide · comparison</option></select>';document.querySelector('.toggles').append(motionLabel);
 const motionRange=motionLabel.querySelector('select');motionRange.value=wideMotion?'wide':'gentle';
 motionRange.onchange=()=>{wideMotion=motionRange.value==='wide';stopReplay();const gain=wideMotion?1:.5;tx=pointerX*gain;ty=pointerY*(wideMotion?1:.65);const u=new URL(location.href);u.searchParams.set('motion',wideMotion?'wide':'gentle');history.replaceState(null,'',u);stage.dataset.pointerTurnRange=wideMotion?'wide':'gentle';wake();};
 stage.dataset.pointerTurnRange=wideMotion?'wide':'gentle';
-function toggleControls(){const p=$('trialControls');p.hidden=!p.hidden;$('controlsToggle').setAttribute('aria-expanded',String(!p.hidden));}
+document.body.dataset.debug=String(params.get('debug')==='1');
+function toggleControls(){if(params.get('debug')!=='1')return;const p=$('trialControls');p.hidden=!p.hidden;$('controlsToggle').setAttribute('aria-expanded',String(!p.hidden));}
 $('controlsToggle').onclick=toggleControls;
 $('previous').onclick=$('next').onclick=()=>lighting(!neutralLighting);
 $('neutralLight').onchange=()=>lighting($('neutralLight').checked);
@@ -136,7 +137,7 @@ function frame(now){
   const active=Math.abs(tx-x)>.0003||Math.abs(ty-y)>.0003||Math.abs(tx-gx)>.0003||Math.abs(ty-gy)>.0003||changing||(age>=0&&age<blinkClose+blinkHold+blinkOpen+.006)||replayStart!==null||hudTrial.needsFrame;
   renderer.render(scene,camera);frames++;
   $('pose').textContent=`Yaw ${(x*35).toFixed(1)}° / pitch ${(-y*7).toFixed(1)}° / ${expression} / ${active?'moving':'idle paused'}`;
-  Object.assign($('pose').dataset,{frames:String(frames),pixels:String(renderer.domElement.width*renderer.domElement.height),triangles:String(renderer.info.render.triangles),drawCalls:String(renderer.info.render.calls),active:String(active),blink:Math.max(bl,br).toFixed(3),blinkPeak:blinkPeak.toFixed(3),model:'nathang30',yaw:(x*35).toFixed(1)});
+  Object.assign($('pose').dataset,{frames:String(frames),pixels:String(renderer.domElement.width*renderer.domElement.height),triangles:String(renderer.info.render.triangles),drawCalls:String(renderer.info.render.calls),lines:String(renderer.info.render.lines),points:String(renderer.info.render.points),active:String(active),blink:Math.max(bl,br).toFixed(3),blinkPeak:blinkPeak.toFixed(3),model:'nathang30',yaw:(x*35).toFixed(1)});
   if(hudDirty){hudTrial.draw(ctx,$('hologram').width,$('hologram').height,expression);hudDirty=false;}
   if(active)wake();else scheduleBlink();
 }

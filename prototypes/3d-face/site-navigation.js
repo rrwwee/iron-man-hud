@@ -1,13 +1,13 @@
-import {createHUDContentSurface} from './hud-content-surface.js?v=purpose-3';
-import {createVisorMenu} from './visor-menu-3d.js?v=purpose-3';
+import {createHUDVolumes} from './hud-volumes.js?v=volume-5';
+import {createHUDContentSurface} from './hud-content-surface.js?v=volume-5';
+import {createVisorMenu} from './visor-menu-3d.js?v=volume-5';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
-  {id:'about',label:'About',kind:'Text',title:'A little about me',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
+  {id:'about',label:'About',kind:'Text',title:'A little about me',html:'<h1>About</h1><p>A collection of projects, notes, sound and places.</p><p>Explore the globe for the places I have lived, studied and coached sailing.</p><h2>Behind the HUD</h2><p><a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">Source code</a></p><p>Face: Tony Stark by <a href="https://sketchfab.com/3d-models/tony-stark-86c267264a2e4903b8c2bcc1b972cb74" target="_blank" rel="noopener noreferrer">Nathang30</a>, CC BY-NC-SA 4.0.</p><p>Armor: Iron man Mark 7 armors by <a href="https://blendswap.com/blend/6708" target="_blank" rel="noopener noreferrer">2iemniak</a>, CC BY 3.0, noncommercial fan art. Models modified for this HUD.</p><p>Globe outlines: Natural Earth, public domain.</p>',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
   {id:'work',label:'Selected work',kind:'Text',title:'Selected work',paragraphs:['A place for two or three things you have made, with a short description and links to explore them.','These are sample sections, not a finished content plan. We can replace this Panel with project previews or individual pages once you choose what belongs here.']},
   {id:'video',label:'Watch',kind:'Video',title:'Video sample'},
   {id:'audio',label:'Listen',kind:'Audio',title:'Audio sample'},
-  {id:'notes',label:'Notes',kind:'Text',title:'Notes and ideas',html:'<h1>Notes and ideas</h1><p>A small collection of experiments in motion, sound and interfaces.</p><h2>Start with the interaction</h2><p>A useful prototype makes a question tangible. Move around, open something, and notice what feels natural.</p><blockquote>Good details make the important action easier to understand.</blockquote><h2>Working notes</h2><ul><li>Keep the face visible around the content.</li><li>Let sound and motion respond to an action.</li><li>Leave room for reading.</li></ul><h2>Next experiments</h2><p>Try a different rhythm, a quieter transition, or a simpler route through the material.</p><p><a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">Explore the project source</a></p>',paragraphs:['Short writing can live here without sending visitors out of the scene. A longer piece could have its own scrollable Panel.','For now, this is sample text so you can judge the reading width, contrast, and how much of the Face remains visible.']},
-  {id:'source',label:'Source code',kind:'External',href:'https://github.com/rrwwee/iron-man-hud'},
+  {id:'notes',label:'Notes',kind:'Text',title:'Notes and ideas',html:'<h1>Notes and ideas</h1><p>A small collection of experiments in motion, sound and interfaces.</p><h2>Start with the interaction</h2><p>A useful prototype makes a question tangible. Move around, open something, and notice what feels natural.</p><blockquote>Good details make the important action easier to understand.</blockquote><h2>Working notes</h2><ul><li>Keep the face visible around the content.</li><li>Let sound and motion respond to an action.</li><li>Leave room for reading.</li></ul><h2>Next experiments</h2><p>Try a different rhythm, a quieter transition, or a simpler route through the material.</p>',paragraphs:['Short writing can live here without sending visitors out of the scene. A longer piece could have its own scrollable Panel.','For now, this is sample text so you can judge the reading width, contrast, and how much of the Face remains visible.']},
 ];
 const svgNS='http://www.w3.org/2000/svg';
 function svg(tag,attributes){const n=document.createElementNS(svgNS,tag);Object.entries(attributes).forEach(([k,v])=>n.setAttribute(k,v));return n;}
@@ -28,10 +28,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   const tickGroup=nav.querySelector('.dial-ticks');
   for(let i=0;i<=76;i++){const a=(-100+i*200/76)*Math.PI/180,r=i%4===0?230:235;tickGroup.append(svg('path',{d:`M${60+Math.cos(a)*r} ${280+Math.sin(a)*r} L${60+Math.cos(a)*241} ${280+Math.sin(a)*241}`}));}
   layer.append(nav);
-  const ocular=svg('svg',{viewBox:'0 0 80 80','aria-hidden':'true'});ocular.classList.add('ocular-tracker');ocular.dataset.ui='';
-  ocular.setAttribute('role','button');ocular.setAttribute('tabindex','0');ocular.setAttribute('aria-label','Center face');ocular.removeAttribute('aria-hidden');
-  const centerFace=()=>document.dispatchEvent(new CustomEvent('hud-center'));ocular.onclick=centerFace;ocular.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();centerFace();}};ocular.append(svg('title',{}));ocular.querySelector('title').textContent='Center face';
-  ocular.append(svg('path',{d:'M8 40 A32 32 0 0 1 65 20 M71 32 A32 32 0 0 1 20 65 M16 40 A24 24 0 0 1 40 16 M40 64 A24 24 0 0 0 64 40 M2 40H11 M69 40H78 M40 2V11 M40 69V78 M35 40H45 M40 35V45'}));layer.append(ocular);
+  const ocular=document.createElement('span');ocular.hidden=true;
   const buttons=Array.from({length:5},()=>{const b=svg('g',{class:'radial-sector',role:'button',tabindex:'0'});nav.querySelector('.radial-items').append(b);return b;});
   const preview=document.createElement('button');preview.className='preview-dial';preview.dataset.ui='';
   preview.innerHTML=`<svg viewBox="0 0 340 340" aria-hidden="true"><defs><linearGradient id="previewStroke" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a0edf4"/><stop offset="1" stop-color="#477986"/></linearGradient></defs><circle cx="170" cy="170" r="154"/><circle cx="170" cy="170" r="141"/><circle class="preview-inner" cx="170" cy="170" r="115"/><g class="preview-ticks"></g><path class="preview-progress"/></svg><span class="preview-type"></span><span class="preview-title"></span><span class="preview-detail"></span><span class="preview-action"></span>`;
@@ -42,7 +39,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   dialog.innerHTML='<div class="content-panel-head"><div><small id="contentKind"></small><h1 id="contentTitle"></h1></div><button id="closeContent" aria-label="Close content">×</button></div><div id="contentBody" class="content-panel-body"></div><p class="content-sample">Sample content · section names and media are still to be chosen</p>';
   stage.append(dialog);
   let selected=0,active=true,opened=null,modal=false,previousFocus=null,lastWheel=0,follow='subtle',lastTransform='',lastPose=[0,0];
-  let contentSurface=null,spatial=null,accessibleShortcuts=null,spatialMode=!!scene&&new URLSearchParams(location.search).get('hudSpace')!=='flat';
+  let currentPlace=null,contentSurface=null,spatial=null,volumes=null,accessibleShortcuts=null,spatialMode=!!scene&&new URLSearchParams(location.search).get('hudSpace')!=='flat';
   const followControl=document.getElementById('hudFollow');
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){follow='fixed';followControl.value='fixed';}
   const modeButton=document.getElementById('hudMode');
@@ -57,7 +54,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
       button.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();button.onclick();}};
       button.onclick=()=>{selected=index;refresh();open(item,buttons.find(b=>b.dataset.entry===item.id));};
     });
-    nav.querySelector('.dial-selected-number').textContent=String(selected+1).padStart(2,'0');
+    nav.querySelector('.dial-selected-number').textContent=String(selected+1).padStart(2,'0');nav.querySelector('.dial-total').textContent=`/ ${String(entries.length).padStart(2,'0')}`;
     const current=entries[selected];nav.dataset.selected=current.id;
     preview.setAttribute('aria-label',`Open ${current.label}`);preview.querySelector('.preview-type').textContent=current.kind==='External'?'EXTERNAL LINK':current.kind.toUpperCase()+' PANEL';
     preview.querySelector('.preview-title').textContent=current.label;
@@ -77,9 +74,8 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     if(transform!==lastTransform){canvas.style.transform=transform;nav.style.transform=`translate3d(${(x*8*strength).toFixed(1)}px,${(y*4*strength).toFixed(1)}px,0)`;preview.style.transform=`translate3d(${(x*13*strength).toFixed(1)}px,${(y*8*strength).toFixed(1)}px,0)`;lastTransform=transform;layer.dataset.poseUpdates=String(Number(layer.dataset.poseUpdates||0)+1);}
     if(eye){const gain=strength===0?0:Math.min(1,strength*.45),ex=eye.restX+(eye.x-eye.restX)*gain,ey=eye.restY+(eye.y-eye.restY)*gain;
       ocular.style.transform=`translate3d(${(ex-36).toFixed(1)}px,${(ey-36).toFixed(1)}px,0)`;}
-    spatial?.setEnabled(active&&spatialMode);spatial?.setUtilities({sound:!contentSurface?.muted,wide:stage.dataset.pointerTurnRange==='wide',light:document.getElementById('neutralLight').checked});spatial?.setPose(x,y,strength,modal);
-    if(accessibleShortcuts){for(const [key,value] of Object.entries({sound:!contentSurface?.muted,motion:stage.dataset.pointerTurnRange==='wide',light:document.getElementById('neutralLight').checked})){accessibleShortcuts.querySelector(`[data-control="${key}"]`)?.setAttribute('aria-pressed',String(value));}}
-    contentSurface?.tick();layer.dataset.follow=follow;
+    spatial?.setEnabled(active&&spatialMode);spatial?.setPose(x,y,strength,modal);
+    volumes?.tick();spatial?.setSuitState(stage.dataset.suitExploded==='true');contentSurface?.tick();layer.dataset.follow=follow;
   }
   function close(){
     if(contentSurface?.isOpen){contentSurface.close();return;}
@@ -89,7 +85,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   }
   function open(item,button,origin='menu'){
     if(item.href){window.open(item.href,'_blank','noopener,noreferrer');return;}
-    if(contentSurface){previousFocus=button||document.activeElement;opened=item.id;spatial.setContentOpen(true);contentSurface.open(item,spatial.contentAnchor(origin));return;}
+    if(contentSurface){previousFocus=button||document.activeElement;opened=item.id;spatial.setContentOpen(true);volumes?.setContentOpen(true);contentSurface.open(item,spatial.contentAnchor(origin));return;}
     dialog.querySelectorAll('video,audio').forEach(media=>media.pause());
     previousFocus=button||document.activeElement;opened=item.id;modal=item.kind!=='Audio';dialog.hidden=false;dialog.dataset.kind=item.kind.toLowerCase();dialog.setAttribute('aria-modal',String(modal));
     dialog.querySelector('#contentTitle').textContent=item.title;dialog.querySelector('#contentKind').textContent=item.kind==='Audio'?'Small audio Panel':item.kind+' Panel';
@@ -123,7 +119,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     }
   });
   window.addEventListener('keydown',e=>{
-    if(!active||modal||e.target.closest('input,select,textarea,audio,video,[contenteditable],#hudContent'))return;
+    if(!active||modal||e.target.closest('input,select,textarea,audio,video,[contenteditable],#hudContent,#instrumentControls'))return;
     if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();rotate(e.key==='ArrowUp'?-1:1);}
     if(e.key==='Enter'&&e.target===nav){e.preventDefault();open(entries[selected],nav);}
   });
@@ -135,11 +131,12 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   modeButton.onclick=()=>{setActive(!active);const u=new URL(location.href);u.searchParams.set('mode',active?'menu':'visual');history.replaceState(null,'',u);};
   if(scene){
     function chooseTarget(slot){
-      if(slot==='map'){window.open('https://www.openstreetmap.org/#map=12/37.7749/-122.4194','_blank','noopener,noreferrer');return;}
-      if(typeof slot==='string'&&slot.startsWith('globe-')){spatial.action(slot);return;}
-      if(slot==='sound'){contentSurface.toggleSound();wake();return;}
-      if(slot==='light'){document.getElementById('neutralLight').click();return;}
-      if(slot==='motion'){const input=document.querySelector('[aria-label="Pointer turn range"]');input.value=input.value==='wide'?'gentle':'wide';input.dispatchEvent(new Event('change'));return;}
+      if(slot==='place-prev'){volumes.step(-1);return;}
+      if(slot==='place-next'){volumes.step(1);return;}
+      if(slot==='place-open'){volumes.open();return;}
+      if(typeof slot==='string'&&slot.startsWith('place:')){volumes.select(Number(slot.slice(6)));return;}
+      if(slot==='suit'){volumes.explode();return;}
+      if(slot==='suit-left'||slot==='suit-right'){volumes.turnSuit(slot==='suit-left'?-.4:.4);return;}
       if(typeof slot==='string'&&slot.startsWith('kind:')){
         const kind=slot.slice(5);let next=selected;
         for(let i=1;i<=entries.length;i++){const j=(selected+i)%entries.length;if(entries[j].kind===kind){next=j;break;}}
@@ -150,11 +147,13 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
       selected=index;refresh();open(entries[index],buttons.find(b=>b.dataset.entry===entries[index].id),slot==='preview'?'preview':'menu');
     }
     spatial=createVisorMenu({scene,camera,stage,wake,onBrowse:browse,onChoose:chooseTarget});
-    contentSurface=createHUDContentSurface({scene,stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);previousFocus?.focus();}});
-    accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.setAttribute('aria-label','Location and display controls');layer.append(accessibleShortcuts);
-    [['globe-home','Center globe on San Francisco'],['globe-left','Rotate globe left'],['globe-right','Rotate globe right'],['globe-zoom','Zoom globe in'],['map','Open San Francisco map'],['sound','Toggle sound'],['motion','Toggle motion range'],['light','Toggle lighting']].forEach(([key,label])=>{
+    contentSurface=createHUDContentSurface({scene,stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);volumes?.setContentOpen(false);previousFocus?.focus();}});
+    volumes=createHUDVolumes({scene,camera,stage,wake,getFrame:()=>spatial.frame,onSelection:(index,places)=>{currentPlace=places[index];spatial.setLocationState(index,places);const output=accessibleShortcuts?.querySelector('output');if(output)output.textContent=currentPlace.label+' — '+currentPlace.role;},onPlace:place=>open({id:'place-'+place.id,kind:'Text',label:place.label,title:place.title,html:`<h1>${place.title}</h1><p>${place.text}</p><p><a href="https://www.openstreetmap.org/#map=12/${place.lat}/${place.lon}" target="_blank" rel="noopener noreferrer">Explore ${place.label} on the map</a></p>`,paragraphs:[place.text]},document.activeElement)});
+    accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.id='instrumentControls';accessibleShortcuts.setAttribute('aria-label','Places and armor');layer.append(accessibleShortcuts);
+    [['place-prev','Previous place'],['place-next','Next place'],['place-open','Open selected place'],['suit','Separate or assemble armor'],['suit-left','Rotate armor left'],['suit-right','Rotate armor right']].forEach(([key,label])=>{
       const b=document.createElement('button');b.textContent=label;b.dataset.control=key;b.onclick=()=>chooseTarget(key);b.onfocus=()=>spatial.focus(key);b.onblur=()=>spatial.focus(null);accessibleShortcuts.append(b);
     });
+    const placeOutput=document.createElement('output');placeOutput.setAttribute('aria-live','polite');placeOutput.textContent=currentPlace?.label+' — '+currentPlace?.role;accessibleShortcuts.append(placeOutput);
     const depthButton=document.createElement('button');depthButton.id='hudDepth';document.querySelector('.hud-choice-buttons').prepend(depthButton);
     function setDepth(value){if(!value&&contentSurface?.isOpen)close();spatialMode=value;preview.hidden=!active||value;accessibleShortcuts.hidden=!active||!value;document.body.classList.toggle('spatial-hud',value);depthButton.textContent=value?'Compare flat HUD':'Try curved 3D';depthButton.setAttribute('aria-pressed',String(value));spatial.setEnabled(active&&value);setPose(...lastPose);invalidate();wake();}
     depthButton.onclick=()=>{setDepth(!spatialMode);const url=new URL(location.href);url.searchParams.set('hudSpace',spatialMode?'curved':'flat');history.replaceState(null,'',url);};
@@ -162,5 +161,5 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     preview.addEventListener('focus',()=>spatial.focus('preview'));preview.addEventListener('blur',()=>spatial.focus(null));setDepth(spatialMode);
   }
   refresh();setActive(new URLSearchParams(location.search).get('mode')!=='visual');
-  return {setPose,get needsFrame(){return !!contentSurface?.needsFrame||!!spatial?.needsFrame;},setVisible:value=>{spatial?.setVisible(value);if(!value&&contentSurface?.isOpen)contentSurface.close();},get isSpatial(){return spatialMode;},get isHovering(){return spatialMode&&spatial?.hovering;},get active(){return active;},get isOpen(){return modal;}};
+  return {setPose,get needsFrame(){return !!contentSurface?.needsFrame||!!spatial?.needsFrame||!!volumes?.needsFrame;},setVisible:value=>{spatial?.setVisible(value);volumes?.setVisible(value);if(!value&&contentSurface?.isOpen)contentSurface.close();},get isSpatial(){return spatialMode;},get isHovering(){return spatialMode&&spatial?.hovering;},get active(){return active;},get isOpen(){return modal;}};
 }

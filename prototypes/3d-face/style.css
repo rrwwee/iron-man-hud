@@ -47,3 +47,8 @@ body[data-hud] .interaction-hint{top:22px;bottom:auto;margin:0;color:#7a9fa680}
 .hud-document blockquote{margin:22px 0;padding:10px 20px;border-left:2px solid #d6b98e;color:#9dc4cd}
 .hud-document a{color:#b5eeff;text-underline-offset:4px}
 .hud-document li{margin-bottom:10px}
+
+/* The public trial is the visor: no page chrome or letterboxed stage. */
+#stage{inset:0;left:0;top:0;width:100vw;height:100dvh;max-width:none;max-height:none;transform:none}
+header,#hudComparison,.interaction-hint,#trialControls{display:none!important}
+body[data-debug=true] #trialControls:not([hidden]){display:block!important}

@@ -80,7 +80,13 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
       // Authored local HTML fixture only; this is not an arbitrary HTML renderer.
       if(next.html)article.innerHTML=next.html;
       else{const heading=document.createElement('h1');heading.textContent=next.title;article.append(heading);next.paragraphs.forEach(text=>{const p=document.createElement('p');p.textContent=text;article.append(p);});}
-      body.append(article);article.addEventListener('scroll',changed,{passive:true});article.addEventListener('focusin',changed);
+      body.append(article);
+      // Short location stories occupy only the space their content needs.
+      const bottom=article.lastElementChild.getBoundingClientRect().bottom-article.getBoundingClientRect().top+28;
+      h=Math.min(h,Math.max(180,Math.ceil(bottom)));article.style.height=`${h}px`;destination.y=.052-contentWidth*h/1280;
+      for(let row=0;row<2;row++)for(let i=0;i<=32;i++)geometry.attributes.uv.setY(row*33+i,1-row*h/canvas.height);
+      geometry.attributes.uv.needsUpdate=true;
+      article.addEventListener('scroll',changed,{passive:true});article.addEventListener('focusin',changed);
     }
     root.dataset.surfaceTriangles='64';root.dataset.textureBytes=String(canvas.width*canvas.height*4);root.dataset.openSerial=String(++serial);
     dirty=true;animateTo(1);closeButton.focus({preventScroll:true});

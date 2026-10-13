@@ -1,5 +1,5 @@
-import {treatments,drawTreatment} from './hud-treatments.js?v=purpose-3';
-import {createSiteNavigation} from './site-navigation.js?v=purpose-3';
+import {treatments,drawTreatment} from './hud-treatments.js?v=volume-5';
+import {createSiteNavigation} from './site-navigation.js?v=volume-5';
 
 export function createHUDTrial({wake,invalidate,scene,camera}){
   const params=new URLSearchParams(location.search);
@@ -7,7 +7,7 @@ export function createHUDTrial({wake,invalidate,scene,camera}){
   let draws=0;
   const bar=document.getElementById('hudComparison'),canvas=document.getElementById('hologram');
   const local=['localhost','127.0.0.1','[::1]'].includes(location.hostname);
-  bar.hidden=!(local||params.get('trial')==='1');
+  bar.hidden=true;
   const navigation=createSiteNavigation({wake,invalidate,scene,camera});
   function select(next){
     key=next;const current=treatments.find(t=>t.key===key);

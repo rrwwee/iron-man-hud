@@ -43,3 +43,6 @@ Next trial once the source is available: replace the lower-right settings instru
 - Browser warnings/errors, syntax, Face budget and whitespace checks pass.
 
 Capture: `purpose-hud-preview.png`. The existing content still contains placeholder portfolio material; this trial does not decide the final personal-site content.
+
+
+Superseded by [VOLUMETRIC-HUD-TRIAL.md](VOLUMETRIC-HUD-TRIAL.md): the user removed the display settings, supplied the suit, chose seven personal places and requested actual 3D globe geometry.

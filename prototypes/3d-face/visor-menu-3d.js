@@ -1,6 +1,6 @@
 // Disposable depth trial. Content instruments share the Face renderer and frame loop.
 import * as THREE from 'three';
-import {createGlobeInstrument} from './globe-instrument.js?v=purpose-3';
+
 
 export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   const group=new THREE.Group();group.position.set(0,1.619,.025);scene.add(group);
@@ -18,7 +18,7 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),projected=new THREE.Vector3();
   let state=null,hover=null,focused=null,enabled=true,visible=true,blocked=false,mouse=null,down=null,paints=0;
   let radialOffset=0,radialStart=0,radialFrom=0,radialMoving=false;
-  let utilities={sound:true,wide:false,light:false};
+  let locationIndex=6,locations=[],suitExploded=false,lastLocationWheel=0;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sheets=[];
   function sheet(width,height,bounds,name){
@@ -38,10 +38,10 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     const result={canvas,ctx:canvas.getContext('2d'),texture,mesh,bounds,name};sheets.push(result);return result;
   }
   const left=sheet(512,640,[-.137,-.025,1.548,1.684],'radial');
-  const right=sheet(512,512,[.042,.129,1.608,1.686],'location');
+  const right=sheet(512,360,[.049,.136,1.607,1.643],'places');
   const channels=sheet(512,320,[.052,.137,1.548,1.6],'channels');
   const cx=62,cy=320,step=.48;
-  const globe=createGlobeInstrument({invalidate:()=>{previewPaint();wake();}});
+
   const colors={cyan:'#a3e7f0',dim:'#548793',white:'#e0faff',amber:'#f2c18f'};
   const glyphs={Text:'T',Video:'▶',Audio:'♫',External:'↗'};
   const itemDetail=item=>item.paragraphs?`${(item.html?item.html.replace(/<[^>]*>/g,' '):item.paragraphs.join(' ')).trim().split(/\s+/).length} words`:item.kind==='Video'?'5 sec':item.kind==='Audio'?'1.1 sec':'github.com';
@@ -82,22 +82,22 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     text(c,'SCROLL TO SELECT',85,22,8,colors.cyan);text(c,'CLICK TO OPEN',85,37,7,colors.dim);
     left.texture.needsUpdate=true;
   }
-  function previewPaint(){globe.draw(right.ctx);right.texture.needsUpdate=true;}
+  function previewPaint(){
+    if(!locations.length)return;const c=right.ctx;c.clearRect(0,0,512,360);const current=locations[locationIndex],prev=locations[(locationIndex+locations.length-1)%locations.length],next=locations[(locationIndex+1)%locations.length];
+    text(c,'Places',256,30,13,colors.dim,'center');text(c,'⌃  '+prev.label,256,76,17,colors.dim,'center');
+    arc(c,256,167,180,3.4,3.9,colors.cyan,1);arc(c,256,167,180,-.75,-.22,colors.cyan,1);
+    text(c,current.label,256,153,28,colors.white,'center');text(c,current.role,256,183,14,colors.amber,'center');
+    for(let i=0;i<locations.length;i++){const x=208+i*16;c.fillStyle=i===locationIndex?colors.amber:colors.dim;c.beginPath();c.arc(x,224,i===locationIndex?4:2,0,Math.PI*2);c.fill();}
+    text(c,next.label+'  ⌄',256,278,17,colors.dim,'center');text(c,'Scroll places · click for story',256,330,12,colors.cyan,'center');right.texture.needsUpdate=true;
+  }
   function channelPaint(){
-    const c=channels.ctx;c.clearRect(0,0,512,320);
-    text(c,'Display controls',20,30,18,colors.cyan);
-    const rows=[['♫','Sound',utilities.sound?'On':'Muted'],['↔','Motion',utilities.wide?'Wide':'Gentle'],['◐','Lighting',utilities.light?'Inspection':'Cinematic']];
-    rows.forEach(([glyph,label,value],i)=>{const y=84+i*83,key=['sound','motion','light'][i],hot=hover===key||focused===key;
-      stroke(c,hot?colors.white:colors.dim,hot?1.5:.7,p=>{p.moveTo(20,y+29);p.lineTo(481,y+29);});
-      arc(c,39,y-5,24,-Math.PI*.8,Math.PI*.8,hot?colors.white:colors.dim,.8);
-      arc(c,39,y-5,28,-Math.PI*.8,-Math.PI*.8+([utilities.sound,utilities.wide,utilities.light][i]?1.6:.7)*Math.PI,colors.cyan,1.8);
-      text(c,glyph,39,y+1,17,hot?colors.white:colors.cyan,'center');text(c,label,89,y,20,colors.cyan);text(c,value,474,y,17,hot?colors.white:colors.amber,'right');
-    });channels.texture.needsUpdate=true;
+    const c=channels.ctx;c.clearRect(0,0,512,320);text(c,'Mark VII',26,22,16,colors.cyan);
+    stroke(c,colors.dim,.8,p=>{p.moveTo(15,35);p.lineTo(70,35);p.moveTo(480,35);p.lineTo(495,35);p.lineTo(495,79);p.moveTo(15,225);p.lineTo(15,281);p.lineTo(78,281);});
+    text(c,suitExploded?'Assemble armor':'Separate armor',256,295,16,colors.amber,'center');text(c,'Drag to inspect',256,316,10,colors.dim,'center');channels.texture.needsUpdate=true;
   }
   function tick(){
     if(radialMoving){const t=Math.min(1,(performance.now()-radialStart)/300);radialOffset=radialFrom*Math.pow(1-t,3);radialMoving=t<1;radialPaint();}
-    if(globe.tick()){previewPaint();}
-    stage.dataset.globe=JSON.stringify(globe.state);stage.dataset.menuAnimating=String(radialMoving);
+    stage.dataset.menuAnimating=String(radialMoving);
   }
   function paint(){if(!state)return;radialPaint();previewPaint();channelPaint();paints++;stage.dataset.hudTexturePaints=String(paints);wake();}
   function setHover(next){if(next===hover)return;hover=next;stage.dataset.hudHover=hover===null?'none':String(hover);stage.style.cursor=hover===null?'':'pointer';paint();}
@@ -106,14 +106,12 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     const r=stage.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,1-(y-r.top)/r.height*2);
     camera.updateMatrixWorld();ray.setFromCamera(pointer,camera);group.updateMatrixWorld(true);
     for(const hit of ray.intersectObjects(sheets.map(s=>s.mesh).filter(mesh=>mesh.visible))){
-      if(hit.object===channels.mesh){
-        const y=(1-hit.uv.y)*320;return y>=48&&y<300?['sound','motion','light'][Math.min(2,Math.floor((y-48)/83))]:null;
-      }
+      if(hit.object===channels.mesh){return (1-hit.uv.y)*320>258?'suit':null;}
       if(hit.object===right.mesh){
-        const x=hit.uv.x*512,y=(1-hit.uv.y)*512;
-        if(y>473)return 'map';
-        if(Math.hypot(x-256,y-226)<205)return 'globe';
-        return y>410?'globe-home':null;
+        const x=hit.uv.x*512,y=(1-hit.uv.y)*360;
+        if(y<102)return 'place-prev';if(y>250&&y<305)return 'place-next';
+        if(y>207&&y<245&&x>195&&x<320)return `place:${Math.max(0,Math.min(locations.length-1,Math.round((x-208)/16)))}`;
+        return 'place-open';
       }
       const x=hit.uv.x*512-cx,y=(1-hit.uv.y)*640-cy,radius=Math.hypot(x,y),a=Math.atan2(y,x),slot=Math.round((a-radialOffset)/step)+2;
       if(radius>=164&&radius<201&&a>=-1.3&&a<1.3)return `jump:${Math.floor((a+1.3)/2.6*state.entries.length)}`;
@@ -122,7 +120,6 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     return null;
   }
   stage.addEventListener('pointermove',e=>{
-    if(down?.target==='globe'&&e.buttons){const dx=e.clientX-down.lx,dy=e.clientY-down.ly;down.dragged=down.dragged||Math.hypot(e.clientX-down.x,e.clientY-down.y)>4;down.lx=e.clientX;down.ly=e.clientY;globe.drag(dx,dy);}
     if(e.hudContentCursor){mouse=null;setHover(null);stage.style.cursor=e.hudContentCursor;return;}
     if(e.target.closest('[data-ui]')){mouse=null;setHover(null);return;}
     mouse=[e.clientX,e.clientY];setHover(hitAt(...mouse));
@@ -132,12 +129,12 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   stage.addEventListener('click',e=>{
     if(e.target.closest('[data-ui]'))return;
     if(down?.dragged){down=null;return;}
-    if(down&&down.target!==null&&state?.selected===down.selected&&performance.now()-down.at<1200&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<12){e.preventDefault();if(down.target==='globe'||down.target==='globe-home')globe.home();else onChoose(down.target);}
+    if(down&&down.target!==null&&state?.selected===down.selected&&performance.now()-down.at<1200&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<12){e.preventDefault();onChoose(down.target);}
     down=null;
   });
   stage.addEventListener('wheel',e=>{
     if(e.target.closest('[data-ui]')||hitAt(e.clientX,e.clientY)===null)return;
-    e.preventDefault();if(hitAt(e.clientX,e.clientY)==='globe')globe.zoom(e.deltaY);else onBrowse(e.deltaY);
+    e.preventDefault();if(String(hitAt(e.clientX,e.clientY)).startsWith('place')){const now=performance.now();if(now-lastLocationWheel>170){lastLocationWheel=now;onChoose(e.deltaY>0?'place-next':'place-prev');}}else onBrowse(e.deltaY);
   },{passive:false});
   function project(x,y,s){
     const xx=THREE.MathUtils.lerp(s.bounds[0],s.bounds[1],x/s.canvas.width),yy=THREE.MathUtils.lerp(s.bounds[3],s.bounds[2],y/s.canvas.height);
@@ -146,9 +143,9 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   }
   return {
     update(value){if(state&&state.selected!==value.selected){let delta=(value.selected-state.selected+value.entries.length)%value.entries.length;if(delta>value.entries.length/2)delta-=value.entries.length;radialFrom=radialOffset+delta*step;radialOffset=reduced?0:radialFrom;radialMoving=!reduced;radialStart=performance.now();}state=value;paint();},
-    setUtilities(value){if(JSON.stringify(value)!==JSON.stringify(utilities)){utilities=value;channelPaint();wake();}},
-    action(value){if(value==='globe-home')globe.home();if(value==='globe-left')globe.turn(-.45);if(value==='globe-right')globe.turn(.45);if(value==='globe-zoom')globe.zoom(-150);},
-    get needsFrame(){return radialMoving||globe.moving;},
+    setLocationState(index,value){locationIndex=index;locations=value;previewPaint();wake();},
+    setSuitState(value){if(value!==suitExploded){suitExploded=value;channelPaint();wake();}},
+    get needsFrame(){return radialMoving;},
     focus(value){focused=value;paint();},
     setEnabled(value){if(value===enabled)return;enabled=value;group.visible=value&&visible;vignette.visible=value;if(!value)setHover(null);wake();},
     setVisible(value){visible=value;group.visible=enabled&&value;if(!value)setHover(null);wake();},
@@ -159,8 +156,8 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
       // Readable debug state for inspecting the actual projected targets and workload.
       stage.dataset.hudYaw=(x*35*gain).toFixed(1);stage.dataset.hudFollowGain=String(gain);stage.dataset.hudDrawCalls=String(group.visible?sheets.filter(s=>s.mesh.visible).length+1:0);stage.dataset.hudTriangles=String(group.visible?sheets.filter(s=>s.mesh.visible).length*64+2:0);stage.dataset.hudTextureBytes=String((512*640+512*512+512*320)*4);
       stage.dataset.hudTargets=JSON.stringify(Array.from({length:5},(_,slot)=>{const a=(slot-2)*step+radialOffset;return {...project(cx+Math.cos(a)*236,cy+Math.sin(a)*236,left),slot,label:state?.entries[(state.selected+slot-2+state.entries.length)%state.entries.length].label};}));
-      stage.dataset.hudChannelTargets=JSON.stringify(['sound','motion','light'].map((target,i)=>({...project(300,84+i*83,channels),target})));
-      stage.dataset.hudGlobeTargets=JSON.stringify({center:project(256,226,right),home:project(256,437,right),map:project(256,493,right)});
+      stage.dataset.hudSuitAction=JSON.stringify(project(256,295,channels));
+      stage.dataset.hudPlaceTargets=JSON.stringify({previous:project(256,76,right),open:project(256,154,right),next:project(256,278,right)});
 
     },
     get frame(){return group.matrixWorld;},

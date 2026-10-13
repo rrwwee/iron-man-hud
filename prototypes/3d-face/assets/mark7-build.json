@@ -1,0 +1,8 @@
+{
+  "source_faces_one_variant": 19364,
+  "parts": 34,
+  "vertices": 5018,
+  "line_segments": 7358,
+  "bytes": 310438,
+  "modifications": "central variant; mirror evaluated; subdivision and split normals removed; adaptive decimation; planar dissolve; feature edges >25 degrees; Y-up; normalized height"
+}

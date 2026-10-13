@@ -1,0 +1,25 @@
+{
+  "title": "Iron man Mark 7 armors",
+  "creator": "2iemniak",
+  "source": "https://blendswap.com/blend/6708",
+  "provided_by": "User download placed in repo root",
+  "archive_license": "CC Attribution 3.0; bundled notice also explicitly marks the model as noncommercial fan art",
+  "files": {
+    "iron-man-mark7.zip": {
+      "bytes": 3638979,
+      "sha256": "4e38b5722da6001f1ccdcb8990595148e25f978337b32783da933ffd0a4f98a4"
+    },
+    "3 ver.jpg": {
+      "bytes": 478679,
+      "sha256": "8a183734150f1566f9cfac12c9f87bb9a3ddbe34bf999eec745613a9df171cf2"
+    },
+    "BLENDSWAP_LICENSE.txt": {
+      "bytes": 3296,
+      "sha256": "463a7b9ac5f3e548aac1cb093c4fc1325416c0ceb0ea173bdd8fdd1c201e0873"
+    },
+    "mark 7 avengers 3 versions .blend": {
+      "bytes": 9495868,
+      "sha256": "f25fe9243fe0314a2ccc342b20e537a691a59b63c7865391504032bd0a0678eb"
+    }
+  }
+}
