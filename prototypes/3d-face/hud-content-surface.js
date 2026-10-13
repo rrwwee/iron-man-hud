@@ -1,7 +1,7 @@
 // Disposable curved-content trial: one 64-triangle sheet and one small canvas texture.
 // The hidden native document supplies text layout, semantics, links and scrolling.
 import * as THREE from 'three';
-import {visorDepth} from './visor-space.js?v=visor-2';
+import {visorDepth} from './visor-space.js?v=icons-3';
 
 export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClose}){
   const root=document.createElement('section');root.id='hudContent';root.dataset.ui='';root.className='hud-content-access';root.hidden=true;root.setAttribute('role','region');
@@ -19,7 +19,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
   const mesh=new THREE.Mesh(geometry,material);mesh.renderOrder=105;mesh.frustumCulled=false;mesh.visible=false;mesh.matrixAutoUpdate=false;scene.add(mesh);
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),point=new THREE.Vector3();
   let item=null,media=null,context=null,analyser=null,signal=null,article=null,links=[],hot=null,down=null;
-  let animation=null,amount=0,closing=false,dirty=true,h=360,contentWidth=.095,serial=0,paints=0,globalMuted=false,scrollTween=null;
+  let animation=null,amount=0,closing=false,dirty=true,h=360,contentWidth=.095,serial=0,paints=0,globalMuted=false,documentRuns=[],documentLinks=[],documentMarks=[],renderedHeight=300;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const origin=new THREE.Vector3(),destination=new THREE.Vector3();
 
@@ -44,7 +44,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
     media?.pause();
     if(media&&media!==video){media.removeAttribute('src');media.load();media.remove();}
     if(context){context.close().catch(()=>{});context=null;}
-    media=context=analyser=signal=article=null;scrollTween=null;links=[];body.replaceChildren();
+    media=context=analyser=signal=article=null;documentRuns=[];documentLinks=[];documentMarks=[];links=[];body.replaceChildren();
   }
   function animateTo(to){animation={at:performance.now(),from:amount,to};wake();}
   function close(){if(!item||closing)return;closing=true;media?.pause();animateTo(0);onClose();}
@@ -66,10 +66,10 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
     root.dataset.kind=next.kind.toLowerCase();root.dataset.item=next.id;root.dataset.open='true';root.dataset.curved='true';root.dataset.expansion='0.000';
     origin.copy(anchor||new THREE.Vector3(.07,.027,.095));amount=0;
     const isVideo=next.kind==='Video',isAudio=next.kind==='Audio';
-    h=isAudio ? 168 : isVideo ? 360 : 460;
+    h=isAudio ? 168 : isVideo ? 360 : 340;
     for(let row=0;row<2;row++)for(let i=0;i<=32;i++)geometry.attributes.uv.setY(row*33+i,1-row*h/canvas.height);
-    geometry.attributes.uv.needsUpdate=true;contentWidth=isVideo||isAudio ? .105 : .098;
-    destination.set(.045,isAudio ? -.002 : isVideo ? .014 : .017,.115);
+    geometry.attributes.uv.needsUpdate=true;contentWidth=next.place ? .098 : .104;
+    destination.set(.008,isAudio ? -.052 : -.039,.115);
     material.blending=isVideo||isAudio?THREE.CustomBlending:THREE.NormalBlending;
     material.premultipliedAlpha=isVideo||isAudio;material.blendSrc=THREE.OneFactor;material.blendDst=THREE.OneMinusSrcColorFactor;
     material.blendSrcAlpha=THREE.OneFactor;material.blendDstAlpha=THREE.OneMinusSrcAlphaFactor;material.needsUpdate=true;
@@ -84,10 +84,10 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
       body.append(article);
       // Short location stories occupy only the space their content needs.
       const bottom=article.lastElementChild.getBoundingClientRect().bottom-article.getBoundingClientRect().top+28;
-      h=Math.min(h,Math.max(180,Math.ceil(bottom)));article.style.height=`${h}px`;destination.y=.052-contentWidth*h/1280;
+      h=Math.min(h,Math.max(180,Math.ceil(bottom)));article.style.height=`${h}px`;destination.y=next.place?-.044:-.039;
       for(let row=0;row<2;row++)for(let i=0;i<=32;i++)geometry.attributes.uv.setY(row*33+i,1-row*h/canvas.height);
       geometry.attributes.uv.needsUpdate=true;
-      article.addEventListener('scroll',changed,{passive:true});article.addEventListener('focusin',changed);
+      article.addEventListener('scroll',changed,{passive:true});article.addEventListener('focusin',changed);layoutDocument();
     }
     root.dataset.surfaceTriangles='64';root.dataset.textureBytes=String(canvas.width*canvas.height*4);root.dataset.openSerial=String(++serial);
     dirty=true;animateTo(1);closeButton.focus({preventScroll:true});
@@ -98,32 +98,41 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
     c.save();c.globalCompositeOperation='destination-in';let g=c.createLinearGradient(0,0,640,0);g.addColorStop(0,'transparent');g.addColorStop(.045,'black');g.addColorStop(.955,'black');g.addColorStop(1,'transparent');c.fillStyle=g;c.fillRect(0,0,640,h);
     g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'transparent');g.addColorStop(.045,'black');g.addColorStop(.955,'black');g.addColorStop(1,'transparent');c.fillStyle=g;c.fillRect(0,0,640,h);c.restore();
   }
-  function drawDocument(){
-    const base=article.getBoundingClientRect();links=[];
-    // The browser performs HTML wrapping and scrolling; rasterize only its laid-out words.
+  function layoutDocument(){
+    documentRuns=[];documentLinks=[];documentMarks=[];
+    const base=article.getBoundingClientRect(),top=article.scrollTop;
     const walker=document.createTreeWalker(article,NodeFilter.SHOW_TEXT);
     while(walker.nextNode()){
       const node=walker.currentNode,style=getComputedStyle(node.parentElement),range=document.createRange();
-      c.font=`${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;c.fillStyle=style.color;c.textAlign='left';c.textBaseline='alphabetic';
+      const font=`${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
       for(const word of node.textContent.matchAll(/\S+/g)){
         range.setStart(node,word.index);range.setEnd(node,word.index+word[0].length);
-        for(const rect of range.getClientRects()){
-          const x=rect.x-base.x,y=rect.y-base.y;
-          if(y+rect.height<0||y>h)continue;
-          c.fillText(word[0],x,y+parseFloat(style.fontSize)*.89);
-          if(node.parentElement.closest('a'))line(x,y+rect.height,x+rect.width,y+rect.height,style.color);
-        }
+        for(const r of range.getClientRects())documentRuns.push({text:word[0],font,color:style.color,x:r.x-base.x,y:r.y-base.y+top,height:r.height,width:r.width,baseline:parseFloat(style.fontSize)*.89,link:!!node.parentElement.closest('a')});
       }
     }
-    for(const a of article.querySelectorAll('a'))for(const rect of a.getClientRects()){
-      const link={x:rect.x-base.x,y:rect.y-base.y,w:rect.width,h:rect.height,node:a};links.push(link);
-      if(document.activeElement===a){c.strokeStyle='#defaff';c.strokeRect(link.x-2,link.y-2,link.w+4,link.h+4);}
+    for(const a of article.querySelectorAll('a'))for(const r of a.getClientRects())documentLinks.push({x:r.x-base.x,y:r.y-base.y+top,w:r.width,h:r.height,node:a});
+    for(const q of article.querySelectorAll('blockquote')){const r=q.getBoundingClientRect();documentMarks.push({x:r.x-base.x,y:r.y-base.y+top,h:r.height,quote:true});}
+    for(const li of article.querySelectorAll('li')){const r=li.getBoundingClientRect();documentMarks.push({x:r.x-base.x-14,y:r.y-base.y+top+15,quote:false});}
+  }
+  function drawDocument(){
+    const top=article.scrollTop;links=documentLinks.map(l=>({...l,y:l.y-top}));
+    c.textAlign='left';c.textBaseline='alphabetic';
+    for(const run of documentRuns){
+      const y=run.y-top;if(y+run.height<0||y>h)continue;
+      c.font=run.font;c.fillStyle=run.color;c.fillText(run.text,run.x,y+run.baseline);
+      if(run.link)line(run.x,y+run.height,run.x+run.width,y+run.height,run.color);
     }
-    for(const quote of article.querySelectorAll('blockquote')){const r=quote.getBoundingClientRect();line(r.x-base.x,r.y-base.y,r.x-base.x,r.bottom-base.y,'#d6b98e',2);}
-    for(const li of article.querySelectorAll('li')){const r=li.getBoundingClientRect();glyph('•',r.x-base.x-14,r.y-base.y+15,18);}
+    for(const l of links)if(document.activeElement===l.node){c.strokeStyle='#defaff';c.strokeRect(l.x-2,l.y-2,l.w+4,l.h+4);}
+    for(const mark of documentMarks){const y=mark.y-top;if(mark.quote)line(mark.x,y,mark.x,y+mark.h,'#d6b98e',2);else if(y>=0&&y<=h)glyph('•',mark.x,y,18);}
     const max=article.scrollHeight-article.clientHeight;
-    if(max>0){const thumb=Math.max(32,h*article.clientHeight/article.scrollHeight),top=article.scrollTop/max*(h-thumb);line(635,6,635,h-6,'#54879366');line(635,top+3,635,top+thumb-3,'#b3edf4',3);}
-    root.dataset.scrollTop=article.scrollTop.toFixed(1);root.dataset.scrollMax=String(max);
+    if(max>0){const thumb=Math.max(36,h*article.clientHeight/article.scrollHeight),y=top/max*(h-thumb);line(635,6,635,h-6,'#54879399',4);line(635,y+3,635,y+thumb-3,'#b3edf4',5);}
+    root.dataset.scrollTop=top.toFixed(1);root.dataset.scrollMax=String(max);
+  }
+  function scrollTo(value){if(!article)return;article.scrollTop=Math.max(0,Math.min(article.scrollHeight-article.clientHeight,value));changed();}
+  function dragScrollbar(p){
+    if(!article||!p)return;
+    const max=article.scrollHeight-article.clientHeight,thumb=Math.max(36,h*article.clientHeight/article.scrollHeight);
+    scrollTo((p.y-(down?.scrollOffset??thumb/2))/(h-thumb)*max);
   }
   function paint(){
     c.clearRect(0,0,canvas.width,canvas.height);
@@ -155,20 +164,27 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
     const hit=ray.intersectObject(mesh)[0];return hit?{x:hit.uv.x*canvas.width,y:(1-hit.uv.y)*canvas.height}:null;
   }
   function target(p){
-    if(!p)return null;if(p.x>625&&p.y<70)return 'close';if(p.x>=640)return null;
+    if(!p)return null;if(p.x>651&&p.y<55)return 'close';if(article&&p.x>622&&p.x<648&&article.scrollHeight>article.clientHeight)return 'scrollbar';if(p.x>=640)return null;
     if(item.kind==='Video'){if(p.y>h-47&&p.x>590)return 'mute';if(p.y>h-47&&p.x>50&&p.x<580)return 'seek';return 'play';}
     if(item.kind==='Audio')return 'play';return links.find(link=>p.x>=link.x&&p.x<=link.x+link.w&&p.y>=link.y&&p.y<=link.y+link.h)?.node||'document';
   }
-  stage.addEventListener('pointermove',e=>{const next=target(hitAt(e.clientX,e.clientY));if(next!==hot){hot=next;dirty=true;wake();}if(next)e.hudContentCursor=next==='document'?'text':'pointer';},{capture:true});
-  stage.addEventListener('pointerdown',e=>{if(e.button!==0)return;const p=hitAt(e.clientX,e.clientY),t=target(p);if(t){down={target:t,at:performance.now(),x:e.clientX,y:e.clientY};e.stopImmediatePropagation();}},{capture:true});
+  stage.addEventListener('pointermove',e=>{const position=hitAt(e.clientX,e.clientY);if(down?.target==='scrollbar'&&e.buttons)dragScrollbar(position||{y:down.py+(e.clientY-down.y)*h/renderedHeight});const next=target(position);if(next!==hot){hot=next;dirty=true;wake();}if(next)e.hudContentCursor=next==='document'?'text':'pointer';},{capture:true});
+  stage.addEventListener('pointerdown',e=>{if(e.button!==0)return;const p=hitAt(e.clientX,e.clientY),t=target(p);if(t){down={target:t,at:performance.now(),x:e.clientX,y:e.clientY};if(t==='scrollbar'){const thumb=Math.max(36,h*article.clientHeight/article.scrollHeight),top=article.scrollTop/(article.scrollHeight-article.clientHeight)*(h-thumb);down.scrollOffset=p.y>=top&&p.y<=top+thumb?p.y-top:thumb/2;down.py=p.y;dragScrollbar(p);stage.setPointerCapture(e.pointerId);}e.stopImmediatePropagation();}},{capture:true});
   stage.addEventListener('click',e=>{
     const p=hitAt(e.clientX,e.clientY),current=target(p),t=down&&performance.now()-down.at<1200&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<12?down.target:current;down=null;
     if(!t)return;e.preventDefault();e.stopImmediatePropagation();
-    if(t==='close')close();else if(t==='play')toggleMedia();else if(t==='mute')toggleSound();
+    if(t==='scrollbar'){}else if(t==='close')close();else if(t==='play')toggleMedia();else if(t==='mute')toggleSound();
     else if(t==='seek'&&p){video.currentTime=Math.max(0,Math.min(1,(p.x-53)/525))*video.duration;changed();}
     else if(t==='document')article.focus({preventScroll:true});else t.click();
   },{capture:true});
-  stage.addEventListener('wheel',e=>{if(article&&hitAt(e.clientX,e.clientY)){e.preventDefault();e.stopImmediatePropagation();const to=Math.max(0,Math.min(article.scrollHeight-article.clientHeight,(scrollTween?.to??article.scrollTop)+e.deltaY));scrollTween=reduced?null:{from:article.scrollTop,to,at:performance.now()};if(reduced)article.scrollTop=to;changed();}},{capture:true,passive:false});
+  stage.addEventListener('pointerup',e=>{if(stage.hasPointerCapture(e.pointerId))stage.releasePointerCapture(e.pointerId);},{capture:true});
+  stage.addEventListener('wheel',e=>{
+    if(article&&hitAt(e.clientX,e.clientY)){
+      e.preventDefault();e.stopImmediatePropagation();
+      const units=e.deltaMode===1?32:e.deltaMode===2?h:e.deltaY===0?0:1;
+      scrollTo(article.scrollTop+e.deltaY*units/Math.max(.25,renderedHeight/h));
+    }
+  },{capture:true,passive:false});
   function surfacePoint(u,v){
     const expansion=.08+.92*amount,width=contentWidth*expansion;
     const x=destination.x+(u*canvas.width/640-.5)*width,y=destination.y+(0.5-v)*width*h/640;
@@ -177,7 +193,6 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
   }
   function tick(){
     if(!item)return;
-    if(scrollTween&&article){const t=Math.min(1,(performance.now()-scrollTween.at)/180);article.scrollTop=scrollTween.from+(scrollTween.to-scrollTween.from)*(1-Math.pow(1-t,3));dirty=true;if(t===1)scrollTween=null;}
     if(animation){const t=Math.min(1,(performance.now()-animation.at)/280);amount=animation.from+(animation.to-animation.from)*(1-Math.pow(1-t,3));if(t===1)animation=null;}
     if(closing&&amount<=0){release();root.hidden=true;mesh.visible=false;root.dataset.open='false';root.dataset.mediaPlaying='false';item=null;return;}
     for(let row=0;row<2;row++)for(let i=0;i<=32;i++)surfacePoint(i/32,row).toArray(positions,(row*33+i)*3);
@@ -185,8 +200,9 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
     if(dirty||(media&&!media.paused))paint();
     root.dataset.expansion=amount.toFixed(3);
     const r=stage.getBoundingClientRect(),project=(u,v)=>{surfacePoint(u,v).applyMatrix4(getFrame()).project(camera);return {x:Math.round(r.left+(point.x+1)*r.width/2),y:Math.round(r.top+(1-point.y)*r.height/2)};};
+    renderedHeight=Math.abs(project(.5,1).y-project(.5,0).y);
     root.dataset.linkTargets=JSON.stringify(links.filter(link=>link.y>=0&&link.y+link.h<=h).map(link=>({...project((link.x+link.w/2)/704,(link.y+link.h/2)/h),href:link.node.href})));
-    root.dataset.targets=JSON.stringify({close:project(675/704,23/h),play:project(28/704,(h-23)/h),center:project(320/704,.5),scroll:project(400/704,.5),seek:project(315/704,(h-23)/h),mute:project(610/704,(h-23)/h)});
+    root.dataset.targets=JSON.stringify({close:project(675/704,23/h),play:project(28/704,(h-23)/h),center:project(320/704,.5),scroll:project(400/704,.5),scrollbar:project(635/704,.5),seek:project(315/704,(h-23)/h),mute:project(610/704,(h-23)/h)});
   }
-  return {open,close,tick,toggleSound,get muted(){return globalMuted;},get isOpen(){return !!item&&!closing;},get needsFrame(){return !!animation||!!scrollTween||!!(media&&!media.paused);}};
+  return {open,close,tick,toggleSound,get muted(){return globalMuted;},get isOpen(){return !!item&&!closing;},get needsFrame(){return !!animation||!!(media&&!media.paused);}};
 }

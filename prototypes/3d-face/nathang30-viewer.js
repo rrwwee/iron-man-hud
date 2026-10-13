@@ -1,8 +1,8 @@
 // Disposable candidate: Nathang30 geometry/UVs, authored local expression controls.
 import * as THREE from 'three';
-import {frameCamera} from './visor-space.js?v=visor-2';
+import {frameCamera} from './visor-space.js?v=icons-3';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
-import { createHUDTrial } from './hud-trial.js?v=visor-2';
+import { createHUDTrial } from './hud-trial.js?v=icons-3';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});

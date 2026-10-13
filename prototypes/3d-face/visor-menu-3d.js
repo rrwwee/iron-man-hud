@@ -1,6 +1,7 @@
 // Disposable depth trial. Content instruments share the Face renderer and frame loop.
 import * as THREE from 'three';
-import {visorDepth} from './visor-space.js?v=visor-2';
+import {drawIcon} from './hud-icons.js?v=icons-3';
+import {visorDepth} from './visor-space.js?v=icons-3';
 
 
 export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
@@ -71,13 +72,13 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
       arc(c,cx,cy,269,a-.215,a+.215,tint,hot?3:chosen?2:1,hot?10:chosen?6:0);
       const lx=cx+Math.cos(a)*236,ly=cy+Math.sin(a)*236;
       c.save();c.translate(lx,ly);c.rotate(a*.22);
-      text(c,item.label,0,4,slot===2?19:16,tint,'center');c.restore();
+      c.beginPath();c.arc(0,0,23,0,Math.PI*2);c.strokeStyle=tint;c.lineWidth=.8;c.stroke();drawIcon(c,item.id,0,0,25,tint);c.restore();
       const mx=cx+Math.cos(a)*315,my=cy+Math.sin(a)*315;
       stroke(c,chosen?colors.amber:colors.dim,.8,p=>{p.moveTo(cx+Math.cos(a)*273,cy+Math.sin(a)*273);p.lineTo(mx-10,my);p.lineTo(mx+12,my);},chosen?5:0);
-      text(c,glyphs[item.kind],mx,my-6,11,tint);
+
       if(hot)stroke(c,colors.white,1,p=>{p.moveTo(lx+68,ly);p.lineTo(lx+84,ly);p.lineTo(lx+90,ly-6);},4);
     }
-    text(c,'BROWSE',cx-10,cy-26,8,colors.dim);text(c,String(state.selected+1).padStart(2,'0'),cx-13,cy+8,33,colors.white);
+text(c,String(state.selected+1).padStart(2,'0'),cx-13,cy+8,33,colors.white);
     text(c,`/ ${String(state.entries.length).padStart(2,'0')}`,cx-9,cy+26,9,colors.dim);
     if(radialMoving)arc(c,cx,cy,308,-.8+radialOffset,.8+radialOffset,colors.amber,2,5);
 
@@ -85,22 +86,25 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   }
   function previewPaint(){} // Location labels are part of the 3D annulus.
   function channelPaint(){
-    const c=channels.ctx;c.clearRect(0,0,512,320);text(c,'VII',26,22,12,colors.cyan);
-    stroke(c,colors.dim,.8,p=>{p.moveTo(15,35);p.lineTo(70,35);p.moveTo(480,35);p.lineTo(495,35);p.lineTo(495,79);p.moveTo(15,225);p.lineTo(15,281);p.lineTo(78,281);});
-    text(c,suitExploded?'Assemble':'Explode',256,295,16,colors.amber,'center');channels.texture.needsUpdate=true;
+    const c=channels.ctx;c.clearRect(0,0,512,320);drawIcon(c,'suit',42,27,20,colors.dim);
+    for(const [x,name,key] of [[152,'left','suit-left'],[256,suitExploded?'assemble':'explode','suit'],[360,'right','suit-right']]){
+      const hot=hover===key||focused===key;c.beginPath();c.arc(x,289,27,0,Math.PI*2);c.strokeStyle=hot?colors.white:colors.dim;c.lineWidth=hot?2:1;c.stroke();
+      drawIcon(c,name,x,289,25,key==='suit'?colors.amber:colors.cyan);
+    }
+    channels.texture.needsUpdate=true;
   }
   function tick(){
     if(radialMoving){const t=Math.min(1,(performance.now()-radialStart)/300);radialOffset=radialFrom*Math.pow(1-t,3);radialMoving=t<1;radialPaint();}
     stage.dataset.menuAnimating=String(radialMoving);
   }
   function paint(){if(!state)return;radialPaint();previewPaint();channelPaint();paints++;stage.dataset.hudTexturePaints=String(paints);wake();}
-  function setHover(next){if(next===hover)return;hover=next;stage.dataset.hudHover=hover===null?'none':String(hover);stage.style.cursor=hover===null?'':'pointer';paint();}
+  function setHover(next){if(next===hover)return;hover=next;stage.dataset.hudHover=hover===null?'none':String(hover);stage.style.cursor=hover===null?'':'pointer';stage.title=typeof hover==='number'&&state?state.entries[(state.selected+hover-2+state.entries.length)%state.entries.length].label:'';paint();}
   function hitAt(x,y){
     if(!enabled||!visible||blocked)return null;
     const r=stage.getBoundingClientRect();pointer.set((x-r.left)/r.width*2-1,1-(y-r.top)/r.height*2);
     camera.updateMatrixWorld();ray.setFromCamera(pointer,camera);group.updateMatrixWorld(true);
     for(const hit of ray.intersectObjects(sheets.map(s=>s.mesh).filter(mesh=>mesh.visible))){
-      if(hit.object===channels.mesh){return (1-hit.uv.y)*320>258?'suit':null;}
+      if(hit.object===channels.mesh){if((1-hit.uv.y)*320<251)return null;const px=hit.uv.x*512;return px<204?'suit-left':px>308?'suit-right':'suit';}
       if(hit.object===right.mesh){
         const x=hit.uv.x*512,y=(1-hit.uv.y)*360;
         if(y<102)return 'place-prev';if(y>250&&y<305)return 'place-next';
@@ -150,10 +154,11 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
       // Readable debug state for inspecting the actual projected targets and workload.
       stage.dataset.hudYaw=(x*35*gain).toFixed(1);stage.dataset.hudFollowGain=String(gain);stage.dataset.hudDrawCalls=String(group.visible?sheets.filter(s=>s.mesh.visible).length+1:0);stage.dataset.hudTriangles=String(group.visible?sheets.filter(s=>s.mesh.visible).reduce((n,s)=>n+s.mesh.geometry.index.count/3,0)+2:0);stage.dataset.hudTextureBytes=String((512*640+512*512+512*320)*4);
       stage.dataset.hudTargets=JSON.stringify(Array.from({length:5},(_,slot)=>{const a=(slot-2)*step+radialOffset;return {...project(cx+Math.cos(a)*236,cy+Math.sin(a)*236,left),slot,label:state?.entries[(state.selected+slot-2+state.entries.length)%state.entries.length].label};}));
-      stage.dataset.hudSuitAction=JSON.stringify(project(256,295,channels));
+      stage.dataset.hudSuitAction=JSON.stringify(project(256,289,channels));stage.dataset.hudSuitControls=JSON.stringify({left:project(152,289,channels),toggle:project(256,289,channels),right:project(360,289,channels)});
       stage.dataset.hudPlaceTargets=JSON.stringify({previous:project(256,76,right),open:project(256,154,right),next:project(256,278,right)});
 
     },
+    hitTarget:hitAt,
     get frame(){return group.matrixWorld;},
     setContentOpen(value){wake();},
     contentAnchor(which){

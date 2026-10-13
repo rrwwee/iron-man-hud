@@ -1,6 +1,6 @@
-import {createHUDVolumes} from './hud-volumes.js?v=visor-2';
-import {createHUDContentSurface} from './hud-content-surface.js?v=visor-2';
-import {createVisorMenu} from './visor-menu-3d.js?v=visor-2';
+import {createHUDVolumes} from './hud-volumes.js?v=icons-3';
+import {createHUDContentSurface} from './hud-content-surface.js?v=icons-3';
+import {createVisorMenu} from './visor-menu-3d.js?v=icons-3';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
   {id:'about',label:'About',kind:'Text',title:'A little about me',html:'<h1>About</h1><p>A collection of projects, notes, sound and places.</p><p>Explore the globe for the places I have lived, studied and coached sailing.</p><h2>Behind the HUD</h2><p><a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">Source code</a></p><p>Face: Tony Stark by <a href="https://sketchfab.com/3d-models/tony-stark-86c267264a2e4903b8c2bcc1b972cb74" target="_blank" rel="noopener noreferrer">Nathang30</a>, CC BY-NC-SA 4.0.</p><p>Armor: Iron man Mark 7 armors by <a href="https://blendswap.com/blend/6708" target="_blank" rel="noopener noreferrer">2iemniak</a>, CC BY 3.0, noncommercial fan art. Models modified for this HUD.</p><p>Globe outlines: Natural Earth, public domain.</p>',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
@@ -69,7 +69,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   function browse(delta){const now=performance.now();if(Math.abs(delta)<2||now-lastWheel<160)return;lastWheel=now;rotate(Math.sign(delta));}
   nav.addEventListener('wheel',event=>{event.preventDefault();browse(event.deltaY);},{passive:false});
   function setPose(x,y,eye){
-    eye=eye||lastPose[2];lastPose=[x,y,eye];const strength=active&&!modal?({fixed:0,subtle:1,close:2.6}[follow]):0;
+    eye=eye||lastPose[2];lastPose=[x,y,eye];const reading=!!contentSurface?.isOpen||modal;const strength=active&&!reading?({fixed:0,subtle:1,close:2.6}[follow]):0;
     const transform=`translate3d(${(x*16*strength).toFixed(1)}px,${(y*9*strength).toFixed(1)}px,0) rotate(${(x*.5*strength).toFixed(2)}deg)`;
     if(transform!==lastTransform){canvas.style.transform=transform;nav.style.transform=`translate3d(${(x*8*strength).toFixed(1)}px,${(y*4*strength).toFixed(1)}px,0)`;preview.style.transform=`translate3d(${(x*13*strength).toFixed(1)}px,${(y*8*strength).toFixed(1)}px,0)`;lastTransform=transform;layer.dataset.poseUpdates=String(Number(layer.dataset.poseUpdates||0)+1);}
     if(eye){const gain=strength===0?0:Math.min(1,strength*.45),ex=eye.restX+(eye.x-eye.restX)*gain,ey=eye.restY+(eye.y-eye.restY)*gain;
@@ -85,7 +85,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   }
   function open(item,button,origin='menu'){
     if(item.href){window.open(item.href,'_blank','noopener,noreferrer');return;}
-    if(contentSurface){previousFocus=button||document.activeElement;opened=item.id;spatial.setContentOpen(true);volumes?.setContentOpen(true);contentSurface.open(item,spatial.contentAnchor(origin));return;}
+    if(contentSurface){previousFocus=button||document.activeElement;opened=item.id;spatial.setContentOpen(true);volumes?.setContentOpen(true);contentSurface.open(item,spatial.contentAnchor(origin));document.dispatchEvent(new CustomEvent('hud-panel',{detail:{open:true}}));return;}
     dialog.querySelectorAll('video,audio').forEach(media=>media.pause());
     previousFocus=button||document.activeElement;opened=item.id;modal=item.kind!=='Audio';dialog.hidden=false;dialog.dataset.kind=item.kind.toLowerCase();dialog.setAttribute('aria-modal',String(modal));
     dialog.querySelector('#contentTitle').textContent=item.title;dialog.querySelector('#contentKind').textContent=item.kind==='Audio'?'Small audio Panel':item.kind+' Panel';
@@ -148,8 +148,12 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
       selected=index;refresh();open(entries[index],buttons.find(b=>b.dataset.entry===entries[index].id),slot==='preview'?'preview':'menu');
     }
     spatial=createVisorMenu({scene,camera,stage,wake,onBrowse:browse,onChoose:chooseTarget});
-    contentSurface=createHUDContentSurface({scene,stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);volumes?.setContentOpen(false);previousFocus?.focus();}});
-    volumes=createHUDVolumes({scene,camera,stage,wake,getFrame:()=>spatial.frame,onSelection:(index,places)=>{currentPlace=places[index];spatial.setLocationState(index,places);const output=accessibleShortcuts?.querySelector('output');if(output)output.textContent=currentPlace.label+' — '+currentPlace.role;},onPlace:place=>open({id:'place-'+place.id,kind:'Text',label:place.label,title:place.title,html:`<h1>${place.title}</h1><p>${place.text}</p><p><a href="https://www.openstreetmap.org/#map=12/${place.lat}/${place.lon}" target="_blank" rel="noopener noreferrer">Explore ${place.label} on the map</a></p>`,paragraphs:[place.text]},document.activeElement)});
+    contentSurface=createHUDContentSurface({scene,stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);volumes?.setContentOpen(false);document.dispatchEvent(new CustomEvent('hud-panel',{detail:{open:false}}));previousFocus?.focus();}});
+    function showPlace(place){open({id:'place-'+place.id,place:true,kind:'Text',label:place.label,title:place.label,html:`<h1>${place.label}</h1><p>${place.text}</p><p><a href="https://www.google.com/maps/search/?api=1&query=${place.lat}%2C${place.lon}" target="_blank" rel="noopener noreferrer">Google Maps ↗</a></p>`,paragraphs:[place.text]},document.activeElement,'place');}
+    volumes=createHUDVolumes({scene,camera,stage,wake,getFrame:()=>spatial.frame,getHUDTarget:(x,y)=>spatial.hitTarget(x,y),onSelection:(index,places)=>{
+      currentPlace=places[index];spatial.setLocationState(index,places);const output=accessibleShortcuts?.querySelector('output');if(output)output.textContent=currentPlace.label+' — '+currentPlace.role;
+      if(opened?.startsWith('place-'))showPlace(currentPlace);
+    },onPlace:showPlace});
     accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.id='instrumentControls';accessibleShortcuts.setAttribute('aria-label','Places and armor');layer.append(accessibleShortcuts);
     [['optic','Focus optic'],['place-prev','Previous place'],['place-next','Next place'],['place-open','Open selected place'],['suit','Separate or assemble armor'],['suit-left','Rotate armor left'],['suit-right','Rotate armor right']].forEach(([key,label])=>{
       const b=document.createElement('button');b.textContent=label;b.dataset.control=key;b.onclick=()=>chooseTarget(key);b.onfocus=()=>spatial.focus(key);b.onblur=()=>spatial.focus(null);accessibleShortcuts.append(b);
@@ -162,5 +166,5 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     preview.addEventListener('focus',()=>spatial.focus('preview'));preview.addEventListener('blur',()=>spatial.focus(null));setDepth(spatialMode);
   }
   refresh();setActive(new URLSearchParams(location.search).get('mode')!=='visual');
-  return {setPose,get needsFrame(){return !!contentSurface?.needsFrame||!!spatial?.needsFrame||!!volumes?.needsFrame;},setVisible:value=>{spatial?.setVisible(value);volumes?.setVisible(value);if(!value&&contentSurface?.isOpen)contentSurface.close();},get isSpatial(){return spatialMode;},get isHovering(){return spatialMode&&spatial?.hovering;},get active(){return active;},get isOpen(){return modal;}};
+  return {setPose,get needsFrame(){return !!contentSurface?.needsFrame||!!spatial?.needsFrame||!!volumes?.needsFrame;},setVisible:value=>{spatial?.setVisible(value);volumes?.setVisible(value);if(!value&&contentSurface?.isOpen)contentSurface.close();},get isSpatial(){return spatialMode;},get isHovering(){return spatialMode&&spatial?.hovering;},get active(){return active;},get isOpen(){return !!contentSurface?.isOpen||modal;}};
 }

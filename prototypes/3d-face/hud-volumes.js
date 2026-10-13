@@ -1,10 +1,10 @@
 // Genuine scene geometry for the location globe, armor and offset instrument rims.
 import * as THREE from 'three';
-import {visorDepth} from './visor-space.js?v=visor-2';
-import {places} from './places.js?v=visor-2';
+import {visorDepth} from './visor-space.js?v=icons-3';
+import {places} from './places.js?v=icons-3';
 const rad=Math.PI/180;
 const vector=(lon,lat,r=1)=>new THREE.Vector3(Math.cos(lat*rad)*Math.sin(lon*rad)*r,Math.sin(lat*rad)*r,Math.cos(lat*rad)*Math.cos(lon*rad)*r);
-export function createHUDVolumes({scene,camera,stage,wake,getFrame,onPlace,onSelection}){
+export function createHUDVolumes({scene,camera,stage,wake,getFrame,getHUDTarget,onPlace,onSelection}){
   const root=new THREE.Group();root.matrixAutoUpdate=false;scene.add(root);
   const globe=new THREE.Group();globe.position.set(.076,.032,visorDepth(.076,.032)-.012);root.add(globe);
   const earth=new THREE.Group();earth.scale.setScalar(.0185);globe.add(earth);
@@ -16,18 +16,18 @@ export function createHUDVolumes({scene,camera,stage,wake,getFrame,onPlace,onSel
   const gridMaterial=wireMaterial.clone();gridMaterial.uniforms.opacity.value=.38;lines(grid,gridMaterial);
   fetch('./assets/globe-land.json').then(r=>r.json()).then(rings=>{const p=[];for(const ring of rings)for(let i=1;i<ring.length;i++)p.push(...vector(...ring[i-1]),...vector(...ring[i]));lines(p,wireMaterial);wake();});
   // A shallow, tilted annulus: each wedge is a place, and the center opens its story.
-  const selector=new THREE.Group();selector.rotation.set(.28,-.18,.05);globe.add(selector);
+  const selector=new THREE.Group();selector.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),new THREE.Vector3(globe.position.x,globe.position.y,globe.position.z-.048).normalize());globe.add(selector);
   const menuCanvas=document.createElement('canvas');menuCanvas.width=menuCanvas.height=768;
   const menuTexture=new THREE.CanvasTexture(menuCanvas);menuTexture.colorSpace=THREE.SRGBColorSpace;menuTexture.generateMipmaps=false;menuTexture.minFilter=THREE.LinearFilter;
   const annulus=new THREE.Mesh(new THREE.RingGeometry(.0225,.032,112,3),new THREE.MeshBasicMaterial({map:menuTexture,transparent:true,side:THREE.DoubleSide,forceSinglePass:true,depthTest:false,depthWrite:false,toneMapped:false}));
   annulus.renderOrder=111;selector.add(annulus);
-  const shortNames=['Galway','St Michaels','Winter Harbor','UCSB','Forest City','Edinburgh','SF'];
+  const shortNames=places.map(place=>place.label);
   function paintPlaces(){
     const c=menuCanvas.getContext('2d'),n=places.length;c.clearRect(0,0,768,768);c.save();c.translate(384,384);
     for(let i=0;i<n;i++){
       const a=-Math.PI/2+i*Math.PI*2/n,b=a+Math.PI*2/n,chosen=i===selected,hot=hover==='place:'+i;
       c.beginPath();c.arc(0,0,381,a+.018,b-.018);c.arc(0,0,270,b-.018,a+.018,true);c.closePath();c.fillStyle=hot?'#548ca16a':chosen?'#c08a4240':'#15364248';c.fill();c.strokeStyle=chosen?'#f4cb90':'#6998a9';c.lineWidth=chosen?3:1;c.stroke();
-      c.save();c.rotate((a+b)/2);c.translate(329,0);c.rotate(Math.PI/2+(((a+b)/2+Math.PI/2)%(Math.PI*2)>Math.PI/2&&((a+b)/2+Math.PI/2)%(Math.PI*2)<Math.PI*1.5?Math.PI:0));c.fillStyle=chosen?'#ffdda5':'#add9e4';c.textAlign='center';c.textBaseline='middle';c.font=(chosen?'bold ':'')+'26px Arial';c.fillText(shortNames[i],0,0);c.restore();
+      c.save();c.rotate((a+b)/2);c.translate(329,0);c.rotate(Math.PI/2+(((a+b)/2+Math.PI/2)%(Math.PI*2)>Math.PI/2&&((a+b)/2+Math.PI/2)%(Math.PI*2)<Math.PI*1.5?Math.PI:0));c.fillStyle=chosen?'#ffdda5':'#add9e4';c.textAlign='center';c.textBaseline='middle';c.font=(chosen?'bold ':'')+'23px Arial';c.fillText(shortNames[i],0,0);c.restore();
     }
     c.restore();menuTexture.needsUpdate=true;
   }
@@ -52,7 +52,7 @@ export function createHUDVolumes({scene,camera,stage,wake,getFrame,onPlace,onSel
         for(let n=0;n<ids.length;n++){const i=ids[n];center.add(new THREE.Vector3(...part.vertices[i]));for(const j of neighbors[i])if(!offsets[j]){offsets[j]=true;ids.push(j);}}
         center.divideScalar(ids.length);
         // Armor plates peel away along the viewing-depth axis, not out to the sides.
-        const depth=center.z<-.012 ? -.26-Math.abs(center.z)*1.6 : .18+Math.max(0,center.z)*2.4;
+        const depth=THREE.MathUtils.clamp(center.z*3,-.26,.26);
         const direction=new THREE.Vector3(Math.sign(center.x)*.012,center.y*.025,depth);
         for(const i of ids)offsets[i]=direction;
       }
@@ -63,9 +63,9 @@ export function createHUDVolumes({scene,camera,stage,wake,getFrame,onPlace,onSel
     armor=lines([],material,suit);armor.geometry.dispose();armor.geometry=g;stage.dataset.suitSegments=String(pos.length/6);wake();
   });
   // The optic occupies the same forward visor shell and inherits the same transform.
-  const optic=new THREE.Group();optic.position.set(.030,.010,visorDepth(.030,.010));root.add(optic);
+  const optic=new THREE.Group();optic.position.set(.030,.008,.075);optic.scale.setScalar(.82);root.add(optic);
   const barrel=new THREE.Group();optic.add(barrel);
-  const axis=new THREE.Vector3(optic.position.x,optic.position.y,optic.position.z-.048).normalize();
+  const axis=new THREE.Vector3(optic.position.x-.0303,optic.position.y-.0062,optic.position.z-.048).normalize();
   barrel.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),axis);
   const rotor=new THREE.Group();barrel.add(rotor);
   const blue=[],gold=[];
@@ -90,9 +90,9 @@ export function createHUDVolumes({scene,camera,stage,wake,getFrame,onPlace,onSel
   lines(gold,new THREE.LineBasicMaterial({color:'#ffd29a',transparent:true,opacity:.95,depthTest:false,depthWrite:false}),rotor).renderOrder=104;
   function focusOptic(){opticUntil=performance.now()+1000;document.dispatchEvent(new CustomEvent('hud-center'));wake();}
   const ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),inverse=new THREE.Matrix4(),localRay=new THREE.Ray(),hitPoint=new THREE.Vector3();
-  function hit(x,y){if(!visible)return null;const r=stage.getBoundingClientRect();mouse.set((x-r.x)/r.width*2-1,1-(y-r.y)/r.height*2);ray.setFromCamera(mouse,camera);inverse.copy(root.matrixWorld).invert();localRay.copy(ray.ray).applyMatrix4(inverse);
-    if(!contentOpen&&localRay.intersectSphere(new THREE.Sphere(optic.position,.017),hitPoint))return 'optic';
-    if(!contentOpen){const found=ray.intersectObject(annulus)[0];if(found){const p=selector.worldToLocal(found.point.clone()),angle=(-Math.atan2(p.y,p.x)+Math.PI/2+Math.PI*2)%(Math.PI*2);return 'place:'+Math.floor(angle/(Math.PI*2)*places.length);}
+  function hit(x,y){if(!visible)return null;if(['suit','suit-left','suit-right'].includes(getHUDTarget?.(x,y)))return null;const r=stage.getBoundingClientRect();mouse.set((x-r.x)/r.width*2-1,1-(y-r.y)/r.height*2);ray.setFromCamera(mouse,camera);inverse.copy(root.matrixWorld).invert();localRay.copy(ray.ray).applyMatrix4(inverse);
+    if(localRay.intersectSphere(new THREE.Sphere(optic.position,.017),hitPoint))return 'optic';
+    {const found=ray.intersectObject(annulus)[0];if(found){const p=selector.worldToLocal(found.point.clone()),angle=(-Math.atan2(p.y,p.x)+Math.PI/2+Math.PI*2)%(Math.PI*2);return 'place:'+Math.floor(angle/(Math.PI*2)*places.length);}
     if(localRay.intersectSphere(new THREE.Sphere(globe.position,.021),hitPoint))return 'globe';}
     if(localRay.intersectBox(new THREE.Box3(new THREE.Vector3(.057,-.077,.11),new THREE.Vector3(.101,-.011,.19)),hitPoint))return 'suit';return null;}
   stage.addEventListener('pointermove',e=>{const target=hit(e.clientX,e.clientY);if(target!==hover){const old=hover;hover=target;if(old?.startsWith('place:')||target?.startsWith('place:'))paintPlaces();opticBlue.opacity=target==='optic'?.95:.64;wake();}if(target)e.hudContentCursor=target==='globe'||target==='suit'?'grab':'pointer';
@@ -117,7 +117,7 @@ export function createHUDVolumes({scene,camera,stage,wake,getFrame,onPlace,onSel
   stage.addEventListener('pointercancel',()=>{down=null;globeVX=globeVY=suitVelocity=0;coastUntil=0;});
   stage.addEventListener('click',e=>{if(!down)return;const d=down;down=null;e.stopImmediatePropagation();if(!d.moved){if(d.target==='globe')onPlace(places[selected]);else if(d.target==='optic')focusOptic();else if(d.target.startsWith('place:')){const index=Number(d.target.slice(6));if(index===selected)onPlace(places[index]);else select(index);}else{targetExplode=targetExplode?0:1;if(reduced)explode=targetExplode;wake();}}},{capture:true});
   stage.addEventListener('wheel',e=>{const target=hit(e.clientX,e.clientY);if(target==='globe'||target?.startsWith('place:')){e.preventDefault();e.stopImmediatePropagation();const now=performance.now();if(now-lastWheel>170){lastWheel=now;select(selected+Math.sign(e.deltaY));}}},{capture:true,passive:false});
-  function tick(x=0,y=0){root.matrix.copy(getFrame());root.updateMatrixWorld(true);root.visible=visible;globe.visible=!contentOpen;optic.visible=visible&&!contentOpen;
+  function tick(x=0,y=0){root.matrix.copy(getFrame());root.updateMatrixWorld(true);root.visible=visible;globe.visible=true;optic.visible=visible;
     const now=performance.now(),dt=Math.min(.05,(now-opticLast)/1000);opticLast=now;
     if(!reduced){opticPhase+=dt*(now<opticUntil?1.4:.12);rotor.rotation.z=opticPhase;rotor.position.z=now<opticUntil?Math.sin((opticUntil-now)/1000*Math.PI)*.0015:0;}
     if(!down&&now<coastUntil){
@@ -129,7 +129,7 @@ export function createHUDVolumes({scene,camera,stage,wake,getFrame,onPlace,onSel
     yaw+=(ty-yaw)*.15;pitch+=(tp-pitch)*.15;explode+=(targetExplode-explode)*.13;
     qy.setFromAxisAngle(yAxis,yaw);qx.setFromAxisAngle(xAxis,pitch);earth.quaternion.multiplyQuaternions(qx,qy);suit.rotation.y=suitYaw;
     if(armor)armor.material.uniforms.explode.value=explode;
-    stage.dataset.volumeMoving=String(moving);stage.dataset.suitExploded=String(targetExplode===1);stage.dataset.globeRotation=JSON.stringify({yaw,pitch});stage.dataset.suitYaw=String(suitYaw);stage.dataset.coasting=String(!down&&now<coastUntil);stage.dataset.visorDepth=String(optic.position.z);
+    stage.dataset.volumeMoving=String(moving);stage.dataset.suitExploded=String(targetExplode===1);stage.dataset.globeRotation=JSON.stringify({yaw,pitch});stage.dataset.suitYaw=String(suitYaw);stage.dataset.coasting=String(!down&&now<coastUntil);stage.dataset.visorDepth=String(optic.position.z);stage.dataset.globeVisible=String(globe.visible);stage.dataset.annulusFacing=JSON.stringify(selector.quaternion.toArray());
     const r=stage.getBoundingClientRect(),project=v=>{v.applyMatrix4(root.matrixWorld).project(camera);return {x:r.x+(v.x+1)*r.width/2,y:r.y+(1-v.y)*r.height/2};};stage.dataset.volumeTargets=JSON.stringify({globe:project(globe.position.clone()),suit:project(suit.position.clone()),places:places.map((p,i)=>{const a=Math.PI/2-(i+.5)*Math.PI*2/places.length;const v=new THREE.Vector3(Math.cos(a)*.0275,Math.sin(a)*.0275,0).applyMatrix4(selector.matrixWorld).project(camera);return {label:p.label,x:r.x+(v.x+1)*r.width/2,y:r.y+(1-v.y)*r.height/2};}),optic:(()=>{const v=optic.position.clone().applyMatrix4(root.matrixWorld).project(camera);return {x:r.x+(v.x+1)*r.width/2,y:r.y+(1-v.y)*r.height/2};})()});
   }
   select(selected);
