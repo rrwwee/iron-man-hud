@@ -1,5 +1,5 @@
-import {createHUDContentSurface} from './hud-content-surface.js?v=surface-4';
-import {createVisorMenu} from './visor-menu-3d.js?v=surface-4';
+import {createHUDContentSurface} from './hud-content-surface.js?v=integrated-5';
+import {createVisorMenu} from './visor-menu-3d.js?v=integrated-5';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
   {id:'about',label:'About',kind:'Text',title:'A little about me',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},

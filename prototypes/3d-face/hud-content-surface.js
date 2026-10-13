@@ -9,8 +9,8 @@ export function createHUDContentSurface({stage,camera,wake,getFrame,onClose}){
   const body=root.querySelector('.hud-content-body'),closeButton=root.querySelector('.hud-content-close');
   const matrix=new THREE.Matrix4(),local=new THREE.Matrix4(),translation=new THREE.Matrix4(),rotation=new THREE.Quaternion(),scale=new THREE.Vector3(),position=new THREE.Vector3();
   let item=null,media=null,context=null,analyser=null,signal=null,wave=null,animation=null,amount=0,closing=false;
-  let w=800,h=450,origin=new THREE.Vector3(.07,.027,.095);
-  const destination=new THREE.Vector3(.012,-.006,.135);
+  let w=800,h=450,contentWidth=.095,origin=new THREE.Vector3(.07,.027,.095);
+  const destination=new THREE.Vector3(),tiltAxis=new THREE.Vector3(0,1,0);
 
   function release(){
     if(media){media.pause();media.removeAttribute('src');media.load();media=null;}
@@ -75,7 +75,11 @@ export function createHUDContentSurface({stage,camera,wake,getFrame,onClose}){
   function open(next,anchor){
     release();item=next;closing=false;root.hidden=false;root.style.opacity='0';root.style.pointerEvents='auto';root.dataset.kind=next.kind.toLowerCase();root.setAttribute('aria-label',next.title||next.label);
     origin.copy(anchor||new THREE.Vector3(.07,.027,.095));amount=0;root.dataset.expansion='0.000';
-    w=800;h=next.kind==='Audio'?210:next.kind==='Video'?450:460;
+    // Keep the eyes and mouth exposed: each medium occupies the right visor wing.
+    const isVideo=next.kind==='Video',isAudio=next.kind==='Audio';
+    w=isVideo||isAudio ? 800 : 640;h=isAudio ? 210 : isVideo ? 450 : 500;
+    contentWidth=isVideo||isAudio ? .095 : .088;
+    destination.set(.061,isAudio ? -.004 : isVideo ? .017 : .014,.115);
     root.style.width=`${w}px`;root.style.height=`${h}px`;
     if(next.kind==='Video'){
       const v=document.createElement('video');v.controls=true;v.playsInline=true;v.preload='auto';v.src='https://developer.mozilla.org/shared-assets/videos/flower.mp4';v.setAttribute('aria-label','Video');body.append(v);media=v;
@@ -105,8 +109,9 @@ export function createHUDContentSurface({stage,camera,wake,getFrame,onClose}){
     // Native element coordinates -> HUD local plane -> world -> clip coordinates.
     // Convert clip x/y/w to a CSS projective matrix; the browser handles hit testing.
     if(camera&&getFrame()){
-      position.copy(origin).lerp(destination,amount);const expansion=.08+.92*amount,worldWidth=.145*expansion,worldHeight=worldWidth*h/w;
+      position.copy(origin).lerp(destination,amount);const expansion=.08+.92*amount,worldWidth=contentWidth*expansion,worldHeight=worldWidth*h/w;
       scale.set(worldWidth/w,-worldHeight/h,1);
+      rotation.setFromAxisAngle(tiltAxis,.22*amount);
       local.compose(position,rotation,scale).multiply(translation.makeTranslation(-w/2,-h/2,0));
       camera.updateMatrixWorld();matrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse).multiply(getFrame()).multiply(local);
       const e=matrix.elements,sx=stage.clientWidth/2,sy=stage.clientHeight/2;

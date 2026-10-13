@@ -8,7 +8,7 @@ Part of [Choose how HUD panels open and coexist with the face](https://github.co
 
 Run the existing local viewer and open:
 
-http://127.0.0.1:4188/?variant=visor&mode=menu&hudSpace=curved&motion=gentle&revision=surface-4
+http://127.0.0.1:4188/?variant=visor&mode=menu&hudSpace=curved&motion=gentle&revision=integrated-5
 
 - Click Watch: only the embedded video and a HUD close control appear. Native video controls handle playback, seeking and volume. The same MDN sample is used; the user's video is still to be chosen.
 - Click Listen: the audio begins on the triggering click. Its waveform reflects live time-domain samples from a Web Audio analyser. Click the waveform or press Space/Enter to pause/replay; left/right keys seek. There is no explanatory card or caption.
@@ -40,3 +40,14 @@ Browser checks verified:
 The HTML fixture is locally authored. A later production implementation must define its content source and sanitization boundary; this prototype does not accept arbitrary remote HTML.
 
 With auto-blink temporarily disabled, two separated observations of the settled open Notes surface stayed at Face frame 10 with `active=false`; normal auto-blink was restored afterward. Browser warnings/errors were empty. Screenshots: `hud-video-surface.png`, `hud-audio-surface.png`, `hud-text-surface.png`.
+
+
+## Integrated projection revision
+
+The central opaque card has been replaced with smaller surfaces on the right visor wing, tilted 0.22 radians into the surrounding instruments. At the centered desktop view the video occupies approximately 423 × 265 screen pixels, versus roughly 745 × 420 previously. The nose, mouth and most of both eyes remain visible. Audio now sits above the format shortcuts rather than crossing their targets.
+
+Video pixels are 34% opaque, screen-blended, and feathered at the edges. There is no solid backing or continuous rectangle around the media. Text keeps a fading local scrim for readability; short open registration marks and a circular close glyph retain the HUD vocabulary. Native video controls also inherit the translucency. The close glyph has an invisible projected hit area of about 55 × 63 pixels at the centered desktop view.
+
+Verified this revision in the browser: video playback reaches ready state 4; pointer clicking the close control succeeds even as the head turns toward it; Notes scrolls to 308.5 of 309 available pixels; a pointer turn changes the open content transform and HUD yaw without closing or freezing it; audio begins playing on open. Closing/replacing content retains the existing cleanup behavior. JS syntax, model-budget and whitespace checks pass.
+
+The change adds CSS compositing (edge masks and screen blend), not a new model, renderer, texture download or render loop. This is a desktop visual trial, not a measured cross-device performance guarantee. Current captures: `integrated-video-surface.png`, `integrated-text-surface.png`, `integrated-audio-surface.png`.

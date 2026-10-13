@@ -37,10 +37,29 @@ body[data-hud] .interaction-hint{top:22px;bottom:auto;margin:0;color:#7a9fa680}
 .motion-label{width:100%;gap:12px;margin-top:7px}.motion-label select{color:#dbe9ed;background:#101a21;border:1px solid #405763;padding:6px;font-size:11px}
 
 /* Native content projected by the same 3D camera as the visor. */
-.hud-content-surface{position:absolute;left:0;top:0;z-index:8;transform-origin:0 0;overflow:visible;will-change:transform;box-shadow:0 0 0 1px #a6e8f2b3,0 0 18px #54bace40;color:#d4edf0;background:#061116e8}
-.hud-content-surface[hidden]{display:none}.hud-content-surface::before,.hud-content-surface::after{content:'';position:absolute;pointer-events:none;width:90px;height:25px;border-color:#e1ca9c;border-style:solid;opacity:.9}.hud-content-surface::before{left:-8px;top:-8px;border-width:2px 0 0 2px}.hud-content-surface::after{right:-8px;bottom:-8px;border-width:0 2px 2px 0}
-.hud-content-body{width:100%;height:100%;overflow:hidden}.hud-content-body video{display:block;width:100%;height:100%;object-fit:contain;background:#000}.hud-content-close{position:absolute;right:-42px;top:-2px;width:32px;height:32px;padding:0;border:1px solid #9cd8e4aa;background:#061116d9;color:#cef5ff;font-size:25px;line-height:1}.hud-content-close:hover,.hud-content-close:focus-visible{background:#245361;color:#fff;box-shadow:0 0 12px #8be6ff88}
-.hud-document{height:100%;overflow:auto;padding:34px 42px;font:20px/1.7 Arial,Helvetica,sans-serif;scrollbar-width:thin;scrollbar-color:#87c9d4 #061116;user-select:text;outline:none}.hud-document h1{font-size:36px;font-weight:400;line-height:1.2;margin:0 0 24px}.hud-document h2{font-size:25px;font-weight:400;margin:30px 0 12px;color:#c4edf2}.hud-document p{margin:0 0 24px}.hud-document blockquote{margin:22px 0;padding:10px 20px;border-left:2px solid #d6b98e;color:#9dc4cd}.hud-document a{color:#b5eeff;text-underline-offset:4px}.hud-document li{margin-bottom:10px}
-.hud-content-surface[data-kind=audio]{background:#06151dcc}.hud-audio-wave{display:block;width:100%;height:100%;cursor:pointer;outline:none}.hud-audio-wave:focus-visible{outline:2px solid #c9f6ff;outline-offset:4px}
-
-.hud-content-surface[data-kind=audio]{background:#03111b55;box-shadow:none}.hud-content-surface[data-kind=video]{box-shadow:0 0 0 1px #a6e8f275,0 0 16px #54bace2b}
+.hud-content-surface{position:absolute;left:0;top:0;z-index:8;transform-origin:0 0;overflow:visible;will-change:transform;color:#d4edf0;background:transparent}
+.hud-content-surface[hidden]{display:none}
+/* Open registration marks belong to the projected surface, without a window surround. */
+.hud-content-surface::before,.hud-content-surface::after{content:'';position:absolute;pointer-events:none;width:70px;height:20px;border-style:solid;border-color:#acdce199;opacity:.8}
+.hud-content-surface::before{left:-10px;top:-10px;border-width:1px 0 0 1px;transform:skewX(-18deg)}
+.hud-content-surface::after{right:-10px;bottom:-10px;border-width:0 1px 1px 0;transform:skewX(-18deg)}
+.hud-content-body{width:100%;height:100%;overflow:hidden}
+.hud-content-surface[data-kind=video],.hud-content-surface[data-kind=audio]{mix-blend-mode:screen}
+.hud-content-body video{display:block;width:100%;height:100%;object-fit:contain;background:transparent;opacity:.34;mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent),linear-gradient(0deg,transparent,#000 7%,#000 93%,transparent);mask-composite:intersect;clip-path:polygon(3% 0,100% 0,100% 94%,97% 100%,0 100%,0 6%)}
+/* A generous invisible hit area keeps the small projected close glyph targetable. */
+.hud-content-close{position:absolute;right:-85px;top:-52px;width:112px;height:112px;padding:0;border:0;background:transparent;color:#cef5ff;font-size:26px;line-height:1}
+.hud-content-close::before{content:'';position:absolute;inset:36px;border:1px solid #9cd8e477;border-radius:50%;background:#06111666;z-index:-1}
+.hud-content-close:hover,.hud-content-close:focus-visible{color:#fff;outline:none}
+.hud-content-close:hover::before,.hud-content-close:focus-visible::before{background:#245361;box-shadow:0 0 12px #8be6ff88;outline:1px solid #c9f6ff;outline-offset:4px}
+.hud-document{height:100%;overflow:auto;padding:22px 28px;background:radial-gradient(ellipse at 70% 45%,#03101699,transparent 75%);text-shadow:0 1px 3px #000;mask-image:linear-gradient(transparent,#000 3%,#000 94%,transparent);font:20px/1.65 Arial,Helvetica,sans-serif;scrollbar-width:thin;scrollbar-color:#87c9d4 transparent;user-select:text;outline:none}
+.hud-document:focus-visible{box-shadow:inset -2px 0 #b5eeff}
+.hud-document h1{font-size:34px;font-weight:400;line-height:1.2;margin:0 0 24px}
+.hud-document h2{font-size:25px;font-weight:400;margin:30px 0 12px;color:#c4edf2}
+.hud-document p{margin:0 0 24px}
+.hud-document blockquote{margin:22px 0;padding:10px 20px;border-left:2px solid #d6b98e;color:#9dc4cd}
+.hud-document a{color:#b5eeff;text-underline-offset:4px}
+.hud-document li{margin-bottom:10px}
+.hud-audio-wave{display:block;width:100%;height:100%;cursor:pointer;outline:none}
+.hud-audio-wave:focus-visible{outline:2px solid #c9f6ff;outline-offset:4px}
+.hud-content-surface[data-kind=audio]::before{width:110px;height:8px;border-color:#d9b78599}
+.hud-content-surface[data-kind=audio]::after{width:110px;height:8px;border-color:#d9b78599}
