@@ -33,3 +33,5 @@ body[data-hud] .interaction-hint{top:22px;bottom:auto;margin:0;color:#7a9fa680}
 .spatial-hud #stage{user-select:none}.spatial-hud .content-panel{user-select:text}.no-hud .hud-follow-layer{visibility:hidden}
 
 .spatial-shortcuts{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);pointer-events:none}.spatial-shortcuts[hidden]{display:none}
+
+.motion-label{width:100%;gap:12px;margin-top:7px}.motion-label select{color:#dbe9ed;background:#101a21;border:1px solid #405763;padding:6px;font-size:11px}

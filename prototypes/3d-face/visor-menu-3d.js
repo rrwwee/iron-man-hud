@@ -33,9 +33,9 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.renderOrder=100;group.add(mesh);
     const result={canvas,ctx:canvas.getContext('2d'),texture,mesh,bounds,name};sheets.push(result);return result;
   }
-  const left=sheet(512,640,[-.153,-.034,1.548,1.684],'radial');
-  const right=sheet(512,512,[.052,.139,1.608,1.686],'preview');
-  const channels=sheet(512,320,[.065,.15,1.548,1.6],'channels');
+  const left=sheet(512,640,[-.137,-.025,1.548,1.684],'radial');
+  const right=sheet(512,512,[.042,.129,1.608,1.686],'preview');
+  const channels=sheet(512,320,[.052,.137,1.548,1.6],'channels');
   const cx=62,cy=320,step=.48;
   const colors={cyan:'#a3e7f0',dim:'#548793',white:'#e0faff',amber:'#f2c18f'};
   const kinds=['Text','Video','Audio','External'],glyphs={Text:'T',Video:'▶',Audio:'♫',External:'↗'};
@@ -163,7 +163,7 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   stage.addEventListener('pointerdown',e=>{if(e.button===0)down={x:e.clientX,y:e.clientY,target:hitAt(e.clientX,e.clientY),selected:state?.selected,at:performance.now()};});
   stage.addEventListener('click',e=>{
     if(e.target.closest('[data-ui]'))return;
-    if(down&&down.target!==null&&state?.selected===down.selected&&performance.now()-down.at<700&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<8){e.preventDefault();onChoose(down.target);}
+    if(down&&down.target!==null&&state?.selected===down.selected&&performance.now()-down.at<1200&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<12){e.preventDefault();onChoose(down.target);}
     down=null;
   });
   stage.addEventListener('wheel',e=>{
@@ -181,11 +181,11 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     setEnabled(value){if(value===enabled)return;enabled=value;group.visible=value&&visible;vignette.visible=value;if(!value)setHover(null);wake();},
     setVisible(value){visible=value;group.visible=enabled&&value;if(!value)setHover(null);wake();},
     setPose(x,y,strength,isBlocked){
-      blocked=isBlocked;const gain=strength===0?0:strength>1?1:.65;
+      blocked=isBlocked;const gain=strength===0?0:strength>1?1:.45;
       camera.updateMatrixWorld();group.rotation.set(y*.12*gain,x*.61*gain,0,'YXZ');group.updateMatrixWorld(true);
       if(blocked)setHover(null);else if(mouse)setHover(hitAt(...mouse));
       // Readable debug state for inspecting the actual projected targets and workload.
-      stage.dataset.hudYaw=(x*35*gain).toFixed(1);stage.dataset.hudDrawCalls=String(group.visible?4:0);stage.dataset.hudTriangles='194';stage.dataset.hudTextureBytes=String((512*640+512*512+512*320)*4);
+      stage.dataset.hudYaw=(x*35*gain).toFixed(1);stage.dataset.hudFollowGain=String(gain);stage.dataset.hudDrawCalls=String(group.visible?4:0);stage.dataset.hudTriangles='194';stage.dataset.hudTextureBytes=String((512*640+512*512+512*320)*4);
       stage.dataset.hudTargets=JSON.stringify(Array.from({length:5},(_,slot)=>{const a=(slot-2)*step;return {...project(cx+Math.cos(a)*236,cy+Math.sin(a)*236,left),slot,label:state?.entries[(state.selected+slot-2+state.entries.length)%state.entries.length].label};}).concat({...project(256,256,right),slot:'preview',label:state?.entries[state.selected].label}));
       stage.dataset.hudChannelTargets=JSON.stringify(kinds.map((kind,i)=>({...project(350,78+i*59,channels),target:`kind:${kind}`})));
       stage.dataset.hudJumpTargets=JSON.stringify((state?.entries||[]).map((item,i)=>{const a=-Math.PI/2+(i+.5)*Math.PI*2/state.entries.length;return {...project(256+Math.cos(a)*221,256+Math.sin(a)*221,right),target:`jump:${i}`,label:item.label};}));

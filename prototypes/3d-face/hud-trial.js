@@ -1,5 +1,5 @@
-import {treatments,drawTreatment} from './hud-treatments.js?v=rich-2';
-import {createSiteNavigation} from './site-navigation.js?v=rich-2';
+import {treatments,drawTreatment} from './hud-treatments.js?v=targeting-2';
+import {createSiteNavigation} from './site-navigation.js?v=targeting-2';
 
 export function createHUDTrial({wake,invalidate,scene,camera}){
   const params=new URLSearchParams(location.search);
