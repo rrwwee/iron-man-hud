@@ -1,6 +1,6 @@
-# Content as a HUD surface — disposable trial
+# Content as a curved HUD surface — disposable trial
 
-Question: can text and media open as projected HUD content instead of a separate modal window, while retaining normal playback and scrolling?
+Question: can expanded video, audio and text wrap around the Face, keep the holographic transparency, and remain usable without another renderer?
 
 Part of [Choose how HUD panels open and coexist with the face](https://github.com/rrwwee/iron-man-hud/issues/5).
 
@@ -8,46 +8,46 @@ Part of [Choose how HUD panels open and coexist with the face](https://github.co
 
 Run the existing local viewer and open:
 
-http://127.0.0.1:4188/?variant=visor&mode=menu&hudSpace=curved&motion=gentle&revision=integrated-5
+http://127.0.0.1:4188/?variant=visor&mode=menu&hudSpace=curved&motion=gentle&revision=curved-content-5
 
-- Click Watch: only the embedded video and a HUD close control appear. Native video controls handle playback, seeking and volume. The same MDN sample is used; the user's video is still to be chosen.
-- Click Listen: the audio begins on the triggering click. Its waveform reflects live time-domain samples from a Web Audio analyser. Click the waveform or press Space/Enter to pause/replay; left/right keys seek. There is no explanatory card or caption.
-- Open Notes: the local HTML fixture demonstrates headings, paragraphs, a quotation, list, link and native scrolling. This is sample content, not a settled personal-site content plan.
-- Close with the HUD × or Escape. Audio/video pause and are removed; the audio context closes. Opening another item also cleans up the previous player.
-- Other menu controls stay usable. No full-screen backdrop, modal focus trap or automatic centering/freezing of the Face is applied to this content surface.
+- Watch preloads the single 5-second MDN sample when this route initializes. Clicking Watch starts it automatically from the beginning. Closing pauses the same retained video element; reopening reuses its buffered data. Only this one small demo clip is preloaded, not an arbitrary collection of future videos.
+- The curved video's HUD controls provide play/pause, seeking and mute. Clicking elsewhere on the video toggles playback. Corresponding native buttons and a seek slider provide keyboard and accessible semantics.
+- Listen starts the original audio sample with a live analyser waveform. Clicking the waveform or activating its keyboard button pauses/replays it.
+- Notes lays out the authored HTML fixture using the browser, then draws its words, quotation, list and links into the curved surface. The mouse wheel scrolls; clicking the text focuses its native document for keyboard scrolling. Links remain clickable through raycasting to their laid-out bounds.
+- Close with the projected × or Escape. Media stops, transient audio and its audio context are released, and the video remains paused and buffered. The Face and HUD continue following the pointer while content is open.
 
-## 3D presentation
+## Actual curvature
 
-`hud-content-surface.js` uses the exact camera projection and world matrix of `visor-menu-3d.js`. A native DOM plane grows from the selected instrument to its content position over 280ms. Its CSS `matrix3d` is computed from the camera/viewport transform, including perspective division, so it rotates and moves with the HUD. The browser handles hit testing and scrolling on that transformed plane.
+`hud-content-surface.js` now renders a 32-segment cylindrical strip (64 triangles) in the existing Three.js scene. It uses the same 0.225 radius and depth profile as `visor-menu-3d.js`, plus that HUD's world transform. Texture UVs follow the curve, including the text, video, controls and waveform. This replaces the flat CSS3D content plane from the previous iteration.
 
-This is a CSS3D content plane, not a video texture or another WebGL mesh. That choice retains native video controls, selectable/scrollable HTML and keyboard accessibility without rasterizing text or adding a second renderer. The original preview instrument hides while its content is expanded and returns when closed.
+The visible content remains on the right visor wing, leaving most of the Face exposed. Video is drawn at 34% alpha, screen-blended, with feathered edges. Text and controls keep readable contrast without a solid rectangular backing. Expansion still grows from the selected instrument over 280ms. The preview dial hides while expanded content is open.
 
-The older two-dimensional modal remains only for the archived MPFB comparison path; the current Nathang30/3D route uses this surface.
+Pointer events raycast the curved mesh, then map its UV coordinates to the actual controls, text and links. The same mapping drives wheel scrolling. Hovering content does not stop Face motion. Pointer-down captures the intended control while the HUD continues moving.
 
-## Workload and checks
+## Workload
 
-No new model, font, library or continuous background animation loop is added. The existing bounded Face loop handles the brief expansion/collapse and the live audio waveform. Native video playback and HTML scrolling use browser composition. Static open text does not require continual Face rendering. The right preview mesh hides while content is expanded, reducing measured WebGL work from seven draw calls / 6,739 triangles to six / 6,675; the native media/compositing work is additional and is not represented by those WebGL counters.
+One canvas texture has fixed GPU storage: 704 × 500 RGBA, **1,408,000 bytes (1.34 MiB)**. Shorter video/audio content uses cropped UVs, so switching content does not resize the GPU allocation. The video image updates at 640 × 360 within that texture. There is one retained decoder, no duplicate video elements, no new model download, library or WebGL renderer.
 
-Browser checks verified:
+The existing capped 30 fps loop drives active playback and audio. Text is rasterized only on content/scroll/focus changes; geometry updates contain just 66 vertices. When playback stops and movement settles, content does not demand a continuing frame loop. Normal automatic Face blinks remain.
 
-- Video plays with native controls; it reached ready state 4.
-- Audio starts without a second Play click and produces a waveform while playing.
-- Replacing and closing media leaves no old audio/video elements in the content surface.
-- Notes scrolls natively (scrollTop 349, scrollHeight 849, clientHeight 460 in the tested layout).
-- A ±35° inspection turn changes the content's projected transform while it remains open; there is no modal backdrop.
-- Syntax, Face asset budget and Git whitespace checks pass.
+Expanded content adds one mesh but replaces the hidden preview mesh: measured total remains **7 draw calls / 6,739 triangles**, the same as the closed curved menu. Face assets remain **634,456 bytes / 6,545 triangles**. Video decode and texture uploads are additional work; these geometry counters are not a complete performance measurement.
 
-The HTML fixture is locally authored. A later production implementation must define its content source and sanitization boundary; this prototype does not accept arbitrary remote HTML.
+The sample source advertises CORS access and a cache lifetime, and is approximately 1.08 MiB. Browsers can limit preloading or evict buffers under memory/network pressure. We request preload and keep the player alive, rather than promising an instant cold first visit.
 
-With auto-blink temporarily disabled, two separated observations of the settled open Notes surface stayed at Face frame 10 with `active=false`; normal auto-blink was restored afterward. Browser warnings/errors were empty. Screenshots: `hud-video-surface.png`, `hud-audio-surface.png`, `hud-text-surface.png`.
+## Verification
 
+- Before opening Watch, the player reached readyState 4 with all **5.055 seconds** buffered.
+- Opening and reopening started playback without a second Play click. Closing left exactly one paused video, readyState 4 and the same buffered range; transient audio count returned to zero.
+- Pointer play/pause, seek and mute worked on the curved controls. A seek while paused stayed paused and reached 2.414 seconds.
+- Pointer motion over content changed Face yaw; it did not freeze the scene.
+- Notes wheel scrolling reached **348.5 / 349 pixels**. The projected link opened the expected repository, and Home restored the start.
+- Video → text → audio → video switching rendered the right content; audio started on open.
+- Browser warning/error logs were empty. JS syntax, model-budget and Git whitespace checks passed.
 
-## Integrated projection revision
+Current captures: `curved-content-video.png`, `curved-content-text.png`, `curved-content-audio.png`.
 
-The central opaque card has been replaced with smaller surfaces on the right visor wing, tilted 0.22 radians into the surrounding instruments. At the centered desktop view the video occupies approximately 423 × 265 screen pixels, versus roughly 745 × 420 previously. The nose, mouth and most of both eyes remain visible. Audio now sits above the format shortcuts rather than crossing their targets.
+## Prototype limits
 
-Video pixels are 34% opaque, screen-blended, and feathered at the edges. There is no solid backing or continuous rectangle around the media. Text keeps a fading local scrim for readability; short open registration marks and a circular close glyph retain the HUD vocabulary. Native video controls also inherit the translucency. The close glyph has an invisible projected hit area of about 55 × 63 pixels at the centered desktop view.
+The HTML is a local authored fixture. This rasterizer handles the demonstrated prose elements, not arbitrary embeds/forms/CSS; visible mouse text selection is not implemented. A production content pipeline still needs an explicit content/sanitization boundary. This is the desktop presentation trial; mobile and release budgets remain separate decisions.
 
-Verified this revision in the browser: video playback reaches ready state 4; pointer clicking the close control succeeds even as the head turns toward it; Notes scrolls to 308.5 of 309 available pixels; a pointer turn changes the open content transform and HUD yaw without closing or freezing it; audio begins playing on open. Closing/replacing content retains the existing cleanup behavior. JS syntax, model-budget and whitespace checks pass.
-
-The change adds CSS compositing (edge masks and screen blend), not a new model, renderer, texture download or render loop. This is a desktop visual trial, not a measured cross-device performance guarantee. Current captures: `integrated-video-surface.png`, `integrated-text-surface.png`, `integrated-audio-surface.png`.
+Earlier captures (`hud-*-surface.png`, `integrated-*-surface.png`) document the modal-to-flat-projection iterations. They are not the current implementation. The archived MPFB path still uses its legacy modal.

@@ -156,6 +156,7 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     return null;
   }
   stage.addEventListener('pointermove',e=>{
+    if(e.hudContentCursor){mouse=null;setHover(null);stage.style.cursor=e.hudContentCursor;return;}
     if(e.target.closest('[data-ui]')){mouse=null;setHover(null);return;}
     mouse=[e.clientX,e.clientY];setHover(hitAt(...mouse));
   });

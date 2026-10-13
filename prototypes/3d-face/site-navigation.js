@@ -1,5 +1,5 @@
-import {createHUDContentSurface} from './hud-content-surface.js?v=integrated-5';
-import {createVisorMenu} from './visor-menu-3d.js?v=integrated-5';
+import {createHUDContentSurface} from './hud-content-surface.js?v=curved-content-5';
+import {createVisorMenu} from './visor-menu-3d.js?v=curved-content-5';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
   {id:'about',label:'About',kind:'Text',title:'A little about me',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
@@ -144,13 +144,13 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
       selected=index;refresh();open(entries[index],buttons.find(b=>b.dataset.entry===entries[index].id),slot==='preview'?'preview':'menu');
     }
     spatial=createVisorMenu({scene,camera,stage,wake,onBrowse:browse,onChoose:chooseTarget});
-    contentSurface=createHUDContentSurface({stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);previousFocus?.focus();}});
+    contentSurface=createHUDContentSurface({scene,stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);previousFocus?.focus();}});
     accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.setAttribute('aria-label','Preview and format shortcuts');layer.append(accessibleShortcuts);
     [...entries.map((e,i)=>[`jump:${i}`,`Preview ${e.label}`]),...['Text','Video','Audio','External'].map(kind=>[`kind:${kind}`,`Browse ${kind==='External'?'links':kind}`])].forEach(([key,label])=>{
       const b=document.createElement('button');b.textContent=label;b.onclick=()=>chooseTarget(key);b.onfocus=()=>spatial.focus(key);b.onblur=()=>spatial.focus(null);accessibleShortcuts.append(b);
     });
     const depthButton=document.createElement('button');depthButton.id='hudDepth';document.querySelector('.hud-choice-buttons').prepend(depthButton);
-    function setDepth(value){spatialMode=value;accessibleShortcuts.hidden=!active||!value;document.body.classList.toggle('spatial-hud',value);depthButton.textContent=value?'Compare flat HUD':'Try curved 3D';depthButton.setAttribute('aria-pressed',String(value));spatial.setEnabled(active&&value);setPose(...lastPose);invalidate();wake();}
+    function setDepth(value){if(!value&&contentSurface?.isOpen)close();spatialMode=value;accessibleShortcuts.hidden=!active||!value;document.body.classList.toggle('spatial-hud',value);depthButton.textContent=value?'Compare flat HUD':'Try curved 3D';depthButton.setAttribute('aria-pressed',String(value));spatial.setEnabled(active&&value);setPose(...lastPose);invalidate();wake();}
     depthButton.onclick=()=>{setDepth(!spatialMode);const url=new URL(location.href);url.searchParams.set('hudSpace',spatialMode?'curved':'flat');history.replaceState(null,'',url);};
     buttons.forEach((b,i)=>{b.addEventListener('focus',()=>spatial.focus(i));b.addEventListener('blur',()=>spatial.focus(null));});
     preview.addEventListener('focus',()=>spatial.focus('preview'));preview.addEventListener('blur',()=>spatial.focus(null));setDepth(spatialMode);

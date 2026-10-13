@@ -1,5 +1,5 @@
-import {treatments,drawTreatment} from './hud-treatments.js?v=integrated-5';
-import {createSiteNavigation} from './site-navigation.js?v=integrated-5';
+import {treatments,drawTreatment} from './hud-treatments.js?v=curved-content-5';
+import {createSiteNavigation} from './site-navigation.js?v=curved-content-5';
 
 export function createHUDTrial({wake,invalidate,scene,camera}){
   const params=new URLSearchParams(location.search);
