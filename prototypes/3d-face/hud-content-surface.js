@@ -18,7 +18,8 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
   const mesh=new THREE.Mesh(geometry,material);mesh.renderOrder=105;mesh.frustumCulled=false;mesh.visible=false;mesh.matrixAutoUpdate=false;scene.add(mesh);
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2(),point=new THREE.Vector3();
   let item=null,media=null,context=null,analyser=null,signal=null,article=null,links=[],hot=null,down=null;
-  let animation=null,amount=0,closing=false,dirty=true,h=360,contentWidth=.095,serial=0,paints=0;
+  let animation=null,amount=0,closing=false,dirty=true,h=360,contentWidth=.095,serial=0,paints=0,globalMuted=false,scrollTween=null;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const origin=new THREE.Vector3(),destination=new THREE.Vector3();
 
   // Start warming the single bounded demo clip before its menu item is opened.
@@ -33,7 +34,8 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
   function button(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=fn;actions.append(b);return b;}
   const closeButton=button('Close content',close);
   const playButton=button('Play video',()=>toggleMedia());
-  const muteButton=button('Mute video',()=>{video.muted=!video.muted;changed();});
+  const muteButton=button('Mute video',toggleSound);
+  function toggleSound(){globalMuted=!globalMuted;video.muted=globalMuted;if(media)media.muted=globalMuted;changed();}
   actions.addEventListener('focusin',changed);actions.addEventListener('focusout',changed);
   const seek=document.createElement('input');seek.type='range';seek.min=0;seek.max=1000;seek.value=0;seek.setAttribute('aria-label','Video position');actions.append(seek);
   seek.oninput=()=>{if(Number.isFinite(video.duration))video.currentTime=Number(seek.value)/1000*video.duration;changed();};
@@ -41,7 +43,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
     media?.pause();
     if(media&&media!==video){media.removeAttribute('src');media.load();media.remove();}
     if(context){context.close().catch(()=>{});context=null;}
-    media=context=analyser=signal=article=null;links=[];body.replaceChildren();
+    media=context=analyser=signal=article=null;scrollTween=null;links=[];body.replaceChildren();
   }
   function animateTo(to){animation={at:performance.now(),from:amount,to};wake();}
   function close(){if(!item||closing)return;closing=true;media?.pause();animateTo(0);onClose();}
@@ -53,7 +55,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
   document.addEventListener('visibilitychange',()=>{if(document.hidden)media?.pause();else changed();});
 
   function audio(){
-    const a=document.createElement('audio');a.src='./assets/menu-audio-sample.wav';a.preload='auto';a.hidden=true;body.append(a);media=a;
+    const a=document.createElement('audio');a.src='./assets/menu-audio-sample.wav';a.preload='auto';a.hidden=true;a.muted=globalMuted;body.append(a);media=a;
     const AudioContext=window.AudioContext||window.webkitAudioContext;
     if(AudioContext){context=new AudioContext();analyser=context.createAnalyser();analyser.fftSize=512;signal=new Uint8Array(analyser.fftSize);context.createMediaElementSource(a).connect(analyser);analyser.connect(context.destination);context.resume().catch(()=>{});}
     a.onplay=a.onpause=a.onended=changed;a.play().catch(changed);
@@ -155,11 +157,11 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
   stage.addEventListener('click',e=>{
     const p=hitAt(e.clientX,e.clientY),current=target(p),t=down&&performance.now()-down.at<1200&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<12?down.target:current;down=null;
     if(!t)return;e.preventDefault();e.stopImmediatePropagation();
-    if(t==='close')close();else if(t==='play')toggleMedia();else if(t==='mute'){video.muted=!video.muted;changed();}
+    if(t==='close')close();else if(t==='play')toggleMedia();else if(t==='mute')toggleSound();
     else if(t==='seek'&&p){video.currentTime=Math.max(0,Math.min(1,(p.x-53)/525))*video.duration;changed();}
     else if(t==='document')article.focus({preventScroll:true});else t.click();
   },{capture:true});
-  stage.addEventListener('wheel',e=>{if(article&&hitAt(e.clientX,e.clientY)){e.preventDefault();e.stopImmediatePropagation();article.scrollTop+=e.deltaY;changed();}},{capture:true,passive:false});
+  stage.addEventListener('wheel',e=>{if(article&&hitAt(e.clientX,e.clientY)){e.preventDefault();e.stopImmediatePropagation();const to=Math.max(0,Math.min(article.scrollHeight-article.clientHeight,(scrollTween?.to??article.scrollTop)+e.deltaY));scrollTween=reduced?null:{from:article.scrollTop,to,at:performance.now()};if(reduced)article.scrollTop=to;changed();}},{capture:true,passive:false});
   function surfacePoint(u,v){
     const expansion=.08+.92*amount,width=contentWidth*expansion;
     const x=destination.x+(u*canvas.width/640-.5)*width,y=destination.y+(0.5-v)*width*h/640;
@@ -168,6 +170,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
   }
   function tick(){
     if(!item)return;
+    if(scrollTween&&article){const t=Math.min(1,(performance.now()-scrollTween.at)/180);article.scrollTop=scrollTween.from+(scrollTween.to-scrollTween.from)*(1-Math.pow(1-t,3));dirty=true;if(t===1)scrollTween=null;}
     if(animation){const t=Math.min(1,(performance.now()-animation.at)/280);amount=animation.from+(animation.to-animation.from)*(1-Math.pow(1-t,3));if(t===1)animation=null;}
     if(closing&&amount<=0){release();root.hidden=true;mesh.visible=false;root.dataset.open='false';root.dataset.mediaPlaying='false';item=null;return;}
     for(let row=0;row<2;row++)for(let i=0;i<=32;i++)surfacePoint(i/32,row).toArray(positions,(row*33+i)*3);
@@ -178,5 +181,5 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
     root.dataset.linkTargets=JSON.stringify(links.filter(link=>link.y>=0&&link.y+link.h<=h).map(link=>({...project((link.x+link.w/2)/704,(link.y+link.h/2)/h),href:link.node.href})));
     root.dataset.targets=JSON.stringify({close:project(675/704,23/h),play:project(28/704,(h-23)/h),center:project(320/704,.5),scroll:project(400/704,.5),seek:project(315/704,(h-23)/h),mute:project(610/704,(h-23)/h)});
   }
-  return {open,close,tick,get isOpen(){return !!item&&!closing;},get needsFrame(){return !!animation||!!(media&&!media.paused);}};
+  return {open,close,tick,toggleSound,get muted(){return globalMuted;},get isOpen(){return !!item&&!closing;},get needsFrame(){return !!animation||!!scrollTween||!!(media&&!media.paused);}};
 }

@@ -8,7 +8,7 @@ Part of [Choose how HUD panels open and coexist with the face](https://github.co
 
 Run the existing local viewer and open:
 
-http://127.0.0.1:4188/?variant=visor&mode=menu&hudSpace=curved&motion=gentle&revision=curved-content-5
+http://127.0.0.1:4188/?variant=visor&mode=menu&hudSpace=curved&motion=gentle&revision=purpose-3
 
 - Watch preloads the single 5-second MDN sample when this route initializes. Clicking Watch starts it automatically from the beginning. Closing pauses the same retained video element; reopening reuses its buffered data. Only this one small demo clip is preloaded, not an arbitrary collection of future videos.
 - The curved video's HUD controls provide play/pause, seeking and mute. Clicking elsewhere on the video toggles playback. Corresponding native buttons and a seek slider provide keyboard and accessible semantics.
@@ -51,3 +51,6 @@ Current captures: `curved-content-video.png`, `curved-content-text.png`, `curved
 The HTML is a local authored fixture. This rasterizer handles the demonstrated prose elements, not arbitrary embeds/forms/CSS; visible mouse text selection is not implemented. A production content pipeline still needs an explicit content/sanitization boundary. This is the desktop presentation trial; mobile and release budgets remain separate decisions.
 
 Earlier captures (`hud-*-surface.png`, `integrated-*-surface.png`) document the modal-to-flat-projection iterations. They are not the current implementation. The archived MPFB path still uses its legacy modal.
+
+
+The next instrument-role and scrolling-animation revision is documented in [FUNCTIONAL-HUD-TRIAL.md](FUNCTIONAL-HUD-TRIAL.md). It keeps this curved content and preload behavior while replacing duplicated browsing instruments with the SF globe and display settings.

@@ -1,5 +1,5 @@
-import {treatments,drawTreatment} from './hud-treatments.js?v=curved-content-5';
-import {createSiteNavigation} from './site-navigation.js?v=curved-content-5';
+import {treatments,drawTreatment} from './hud-treatments.js?v=purpose-3';
+import {createSiteNavigation} from './site-navigation.js?v=purpose-3';
 
 export function createHUDTrial({wake,invalidate,scene,camera}){
   const params=new URLSearchParams(location.search);
@@ -31,7 +31,7 @@ export function createHUDTrial({wake,invalidate,scene,camera}){
   return {setPose:(x,y,eye)=>navigation.setPose(x,y,eye),setVisible:value=>navigation.setVisible(value),get isHovering(){return navigation.isHovering;},get needsFrame(){return navigation.needsFrame;},get isOpen(){return navigation.isOpen;},draw(ctx,w,h,expression){drawTreatment(ctx,w,h,key,expression,{interactive:navigation.active});draws++;
     const current=treatments.find(t=>t.key===key);
     document.getElementById('hudCurrent').textContent=navigation.active?(navigation.isSpatial?'Curved 3D navigation':'Flat radial navigation'):`${current.letter} / ${current.name}`;
-    document.getElementById('hudDescription').textContent=navigation.active?(navigation.isSpatial?'Live tracking · hover to highlight · click to open':'Scroll to browse · click to open'):current.description;
+    document.getElementById('hudDescription').textContent=navigation.active?(navigation.isSpatial?'Scroll the menu · drag or zoom the globe':'Scroll to browse · click to open'):current.description;
     canvas.dataset.treatment=navigation.active?'radial':key;canvas.dataset.draws=String(draws);canvas.dataset.pixels=String(w*h);
   }};
 }

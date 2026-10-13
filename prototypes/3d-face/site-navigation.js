@@ -1,5 +1,5 @@
-import {createHUDContentSurface} from './hud-content-surface.js?v=curved-content-5';
-import {createVisorMenu} from './visor-menu-3d.js?v=curved-content-5';
+import {createHUDContentSurface} from './hud-content-surface.js?v=purpose-3';
+import {createVisorMenu} from './visor-menu-3d.js?v=purpose-3';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
   {id:'about',label:'About',kind:'Text',title:'A little about me',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
@@ -77,7 +77,8 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     if(transform!==lastTransform){canvas.style.transform=transform;nav.style.transform=`translate3d(${(x*8*strength).toFixed(1)}px,${(y*4*strength).toFixed(1)}px,0)`;preview.style.transform=`translate3d(${(x*13*strength).toFixed(1)}px,${(y*8*strength).toFixed(1)}px,0)`;lastTransform=transform;layer.dataset.poseUpdates=String(Number(layer.dataset.poseUpdates||0)+1);}
     if(eye){const gain=strength===0?0:Math.min(1,strength*.45),ex=eye.restX+(eye.x-eye.restX)*gain,ey=eye.restY+(eye.y-eye.restY)*gain;
       ocular.style.transform=`translate3d(${(ex-36).toFixed(1)}px,${(ey-36).toFixed(1)}px,0)`;}
-    spatial?.setEnabled(active&&spatialMode);spatial?.setPose(x,y,strength,modal);
+    spatial?.setEnabled(active&&spatialMode);spatial?.setUtilities({sound:!contentSurface?.muted,wide:stage.dataset.pointerTurnRange==='wide',light:document.getElementById('neutralLight').checked});spatial?.setPose(x,y,strength,modal);
+    if(accessibleShortcuts){for(const [key,value] of Object.entries({sound:!contentSurface?.muted,motion:stage.dataset.pointerTurnRange==='wide',light:document.getElementById('neutralLight').checked})){accessibleShortcuts.querySelector(`[data-control="${key}"]`)?.setAttribute('aria-pressed',String(value));}}
     contentSurface?.tick();layer.dataset.follow=follow;
   }
   function close(){
@@ -128,12 +129,17 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   });
   nav.tabIndex=0;
   function setActive(value){
-    active=value;nav.hidden=preview.hidden=!active;if(accessibleShortcuts)accessibleShortcuts.hidden=!active||!spatialMode;ocular.style.display=active?'':'none';document.body.dataset.navigation=active?'radial':'visual';followControl.closest('label').hidden=!active;
+    active=value;nav.hidden=!active;preview.hidden=!active||spatialMode;if(accessibleShortcuts)accessibleShortcuts.hidden=!active||!spatialMode;ocular.style.display=active?'':'none';document.body.dataset.navigation=active?'radial':'visual';followControl.closest('label').hidden=!active;
     modeButton.textContent=active?'Visuals only':'Try the menu';if(!active&&opened)close();setPose(...lastPose);invalidate();wake();
   }
   modeButton.onclick=()=>{setActive(!active);const u=new URL(location.href);u.searchParams.set('mode',active?'menu':'visual');history.replaceState(null,'',u);};
   if(scene){
     function chooseTarget(slot){
+      if(slot==='map'){window.open('https://www.openstreetmap.org/#map=12/37.7749/-122.4194','_blank','noopener,noreferrer');return;}
+      if(typeof slot==='string'&&slot.startsWith('globe-')){spatial.action(slot);return;}
+      if(slot==='sound'){contentSurface.toggleSound();wake();return;}
+      if(slot==='light'){document.getElementById('neutralLight').click();return;}
+      if(slot==='motion'){const input=document.querySelector('[aria-label="Pointer turn range"]');input.value=input.value==='wide'?'gentle':'wide';input.dispatchEvent(new Event('change'));return;}
       if(typeof slot==='string'&&slot.startsWith('kind:')){
         const kind=slot.slice(5);let next=selected;
         for(let i=1;i<=entries.length;i++){const j=(selected+i)%entries.length;if(entries[j].kind===kind){next=j;break;}}
@@ -145,16 +151,16 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     }
     spatial=createVisorMenu({scene,camera,stage,wake,onBrowse:browse,onChoose:chooseTarget});
     contentSurface=createHUDContentSurface({scene,stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);previousFocus?.focus();}});
-    accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.setAttribute('aria-label','Preview and format shortcuts');layer.append(accessibleShortcuts);
-    [...entries.map((e,i)=>[`jump:${i}`,`Preview ${e.label}`]),...['Text','Video','Audio','External'].map(kind=>[`kind:${kind}`,`Browse ${kind==='External'?'links':kind}`])].forEach(([key,label])=>{
-      const b=document.createElement('button');b.textContent=label;b.onclick=()=>chooseTarget(key);b.onfocus=()=>spatial.focus(key);b.onblur=()=>spatial.focus(null);accessibleShortcuts.append(b);
+    accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.setAttribute('aria-label','Location and display controls');layer.append(accessibleShortcuts);
+    [['globe-home','Center globe on San Francisco'],['globe-left','Rotate globe left'],['globe-right','Rotate globe right'],['globe-zoom','Zoom globe in'],['map','Open San Francisco map'],['sound','Toggle sound'],['motion','Toggle motion range'],['light','Toggle lighting']].forEach(([key,label])=>{
+      const b=document.createElement('button');b.textContent=label;b.dataset.control=key;b.onclick=()=>chooseTarget(key);b.onfocus=()=>spatial.focus(key);b.onblur=()=>spatial.focus(null);accessibleShortcuts.append(b);
     });
     const depthButton=document.createElement('button');depthButton.id='hudDepth';document.querySelector('.hud-choice-buttons').prepend(depthButton);
-    function setDepth(value){if(!value&&contentSurface?.isOpen)close();spatialMode=value;accessibleShortcuts.hidden=!active||!value;document.body.classList.toggle('spatial-hud',value);depthButton.textContent=value?'Compare flat HUD':'Try curved 3D';depthButton.setAttribute('aria-pressed',String(value));spatial.setEnabled(active&&value);setPose(...lastPose);invalidate();wake();}
+    function setDepth(value){if(!value&&contentSurface?.isOpen)close();spatialMode=value;preview.hidden=!active||value;accessibleShortcuts.hidden=!active||!value;document.body.classList.toggle('spatial-hud',value);depthButton.textContent=value?'Compare flat HUD':'Try curved 3D';depthButton.setAttribute('aria-pressed',String(value));spatial.setEnabled(active&&value);setPose(...lastPose);invalidate();wake();}
     depthButton.onclick=()=>{setDepth(!spatialMode);const url=new URL(location.href);url.searchParams.set('hudSpace',spatialMode?'curved':'flat');history.replaceState(null,'',url);};
     buttons.forEach((b,i)=>{b.addEventListener('focus',()=>spatial.focus(i));b.addEventListener('blur',()=>spatial.focus(null));});
     preview.addEventListener('focus',()=>spatial.focus('preview'));preview.addEventListener('blur',()=>spatial.focus(null));setDepth(spatialMode);
   }
   refresh();setActive(new URLSearchParams(location.search).get('mode')!=='visual');
-  return {setPose,get needsFrame(){return !!contentSurface?.needsFrame;},setVisible:value=>{spatial?.setVisible(value);if(!value&&contentSurface?.isOpen)contentSurface.close();},get isSpatial(){return spatialMode;},get isHovering(){return spatialMode&&spatial?.hovering;},get active(){return active;},get isOpen(){return modal;}};
+  return {setPose,get needsFrame(){return !!contentSurface?.needsFrame||!!spatial?.needsFrame;},setVisible:value=>{spatial?.setVisible(value);if(!value&&contentSurface?.isOpen)contentSurface.close();},get isSpatial(){return spatialMode;},get isHovering(){return spatialMode&&spatial?.hovering;},get active(){return active;},get isOpen(){return modal;}};
 }
