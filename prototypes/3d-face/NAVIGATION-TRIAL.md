@@ -1,5 +1,7 @@
 # Radial personal-site navigation — disposable trial
 
+The latest pass is [the curved 3D HUD](CURVED-HUD-TRIAL.md). This file records its preceding flat treatment.
+
 Part of [Choose how HUD panels open and coexist with the face](https://github.com/rrwwee/iron-man-hud/issues/5). The user clarified that the HUD is the functional navigation for a personal website, including mixed text, video, audio and external links. Final content is still undecided.
 
 ## Try it

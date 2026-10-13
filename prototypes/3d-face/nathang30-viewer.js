@@ -1,7 +1,7 @@
 // Disposable candidate: Nathang30 geometry/UVs, authored local expression controls.
 import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
-import { createHUDTrial } from './hud-trial.js?v=instruments-2';
+import { createHUDTrial } from './hud-trial.js?v=curved-3';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});
@@ -24,12 +24,12 @@ const start=performance.now(),gaze={value:new THREE.Vector2()},closure={value:ne
 const expressions={neutral:{},smirk:{mouthSmileLeft:.85,browOuterUpRight:.2},surprise:{browInnerUp:.85,browOuterUpLeft:.5,browOuterUpRight:.5,jawOpen:.6},skeptical:{browOuterUpRight:.9,browDownLeft:.6,mouthSmileRight:.22}};
 function wake(){if(!raf&&!document.hidden)raf=requestAnimationFrame(frame);}
 function lighting(value){neutralLighting=value;$('neutralLight').checked=value;key.color.set(value?0xffffff:0xffbd99);fill.color.set(value?0xffffff:0x8bcdf7);key.intensity=value?.06:.045;fill.intensity=value?.04:.023;ambient.intensity=value?.35:.02;$('variantLabel').textContent=value?'Inspection lighting':'Cinematic lighting';const u=new URL(location.href);if(value)u.searchParams.set('light','inspection');else u.searchParams.delete('light');history.replaceState(null,'',u);wake();}
-const hudTrial=createHUDTrial({wake,invalidate:()=>{hudDirty=true;}});
+const hudTrial=createHUDTrial({scene,camera,wake,invalidate:()=>{hudDirty=true;}});
 function toggleControls(){const p=$('trialControls');p.hidden=!p.hidden;$('controlsToggle').setAttribute('aria-expanded',String(!p.hidden));}
 $('controlsToggle').onclick=toggleControls;
 $('previous').onclick=$('next').onclick=()=>lighting(!neutralLighting);
 $('neutralLight').onchange=()=>lighting($('neutralLight').checked);
-$('hudToggle').onchange=()=>document.body.classList.toggle('no-hud',!$('hudToggle').checked);
+$('hudToggle').onchange=()=>{document.body.classList.toggle('no-hud',!$('hudToggle').checked);hudTrial.setVisible($('hudToggle').checked);wake();};
 // These belonged to the MPFB comparison. This candidate uses its own fitted eye surfaces.
 $('photoEyes').closest('label').hidden=true;$('relaxedEyes').closest('label').hidden=true;
 $('photoEyes').closest('label').style.display='none';$('relaxedEyes').closest('label').style.display='none';
@@ -47,8 +47,9 @@ for(const [label,value] of [['Turn left',-1],['Turn right',1]]){const b=document
 const held=document.createElement('button');held.textContent='Hold blink';held.setAttribute('aria-pressed','false');held.onclick=()=>{holdBlink=!holdBlink;held.setAttribute('aria-pressed',String(holdBlink));wake();};document.querySelector('.actions').append(held);
 $('center').onclick=()=>{stopReplay();tx=ty=x=y=gx=gy=0;wake();};
 $('replay').onclick=()=>{if(replayStart!==null){stopReplay();wake();return;}replayStart=(performance.now()-start)/1000;$('replay').textContent='Stop replay';wake();};
-stage.addEventListener('pointermove',e=>{if(replayStart!==null||hudTrial.isOpen||e.target.closest('[data-ui]'))return;const r=stage.getBoundingClientRect();tx=THREE.MathUtils.clamp((e.clientX-r.left)/r.width*2-1,-1,1);ty=THREE.MathUtils.clamp((e.clientY-r.top)/r.height*2-1,-1,1);wake();});
+stage.addEventListener('pointermove',e=>{if(replayStart!==null||hudTrial.isOpen||hudTrial.isHovering||e.target.closest('[data-ui]'))return;const r=stage.getBoundingClientRect();tx=THREE.MathUtils.clamp((e.clientX-r.left)/r.width*2-1,-1,1);ty=THREE.MathUtils.clamp((e.clientY-r.top)/r.height*2-1,-1,1);wake();});
 stage.addEventListener('pointerleave',()=>{if(replayStart===null)tx=ty=0;wake();});
+document.addEventListener('hud-hover',e=>{if(e.detail.hovering){stopReplay();tx=x;ty=y;wake();}});
 document.addEventListener('hud-center',()=>{stopReplay();tx=ty=x=y=gx=gy=0;wake();});
 document.addEventListener('hud-panel',e=>{if(e.detail.open){stopReplay();tx=ty=0;clearTimeout(blinkTimer);}else{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;}wake();});
 function resize(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.min(1,960/w,600/h);renderer.setPixelRatio(scale);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();$('hologram').width=Math.round(w*scale);$('hologram').height=Math.round(h*scale);hudDirty=true;wake();}
