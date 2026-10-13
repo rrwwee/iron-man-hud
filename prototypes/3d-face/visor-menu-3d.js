@@ -1,5 +1,6 @@
 // Disposable depth trial. Content instruments share the Face renderer and frame loop.
 import * as THREE from 'three';
+import {visorDepth} from './visor-space.js?v=visor-2';
 
 
 export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
@@ -21,9 +22,7 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   let locationIndex=6,locations=[],suitExploded=false,lastLocationWheel=0;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sheets=[];
-  const surfaceZ=(x,y,name)=>name==='radial'
-    ? .115+Math.sqrt(Math.max(.001,.18*.18-x*x-(y-1.619)*(y-1.619)))-.18
-    : .14+Math.sqrt(.225*.225-x*x)-.225-.025;
+  const surfaceZ=(x,y)=>visorDepth(x,y-1.619);
   function sheet(width,height,bounds,name){
     const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
     const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;
@@ -38,9 +37,9 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.renderOrder=100;group.add(mesh);
     const result={canvas,ctx:canvas.getContext('2d'),texture,mesh,bounds,name};sheets.push(result);return result;
   }
-  const left=sheet(512,640,[-.145,-.024,1.547,1.683],'radial');
+  const left=sheet(512,640,[-.128,-.004,1.555,1.681],'radial');
   const right=sheet(512,360,[.049,.136,1.607,1.643],'places');
-  const channels=sheet(512,320,[.052,.137,1.544,1.6],'channels');
+  const channels=sheet(512,320,[.036,.116,1.544,1.601],'channels');
   right.mesh.visible=false; // The places now live on the globe's actual annulus.
   const cx=62,cy=320,step=.48;
 
@@ -160,7 +159,7 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
     contentAnchor(which){
       const s=which==='preview'?right:left,px=which==='preview'?256:cx+236,py=which==='preview'?256:cy;
       const xx=THREE.MathUtils.lerp(s.bounds[0],s.bounds[1],px/s.canvas.width),yy=THREE.MathUtils.lerp(s.bounds[3],s.bounds[2],py/s.canvas.height);
-      return new THREE.Vector3(xx,yy-1.619,.14+Math.sqrt(.225*.225-xx*xx)-.225-.025);
+      return new THREE.Vector3(xx,yy-1.619,visorDepth(xx,yy-1.619));
     },
     get hovering(){return hover!==null;},
   };

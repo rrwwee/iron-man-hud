@@ -1,7 +1,8 @@
 // Disposable candidate: Nathang30 geometry/UVs, authored local expression controls.
 import * as THREE from 'three';
+import {frameCamera} from './visor-space.js?v=visor-2';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
-import { createHUDTrial } from './hud-trial.js?v=optics-2';
+import { createHUDTrial } from './hud-trial.js?v=visor-2';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});
@@ -12,7 +13,7 @@ const pivot=new THREE.Group();pivot.position.set(0,1.619,.025);scene.add(pivot);
 const ambient=new THREE.HemisphereLight(0xaccddd,0x000000,.02);scene.add(ambient);
 const key=new THREE.PointLight(0xffbd99,.045,2,2),fill=new THREE.PointLight(0x8bcdf7,.023,2,2);
 key.position.set(-.11,1.67,.27);fill.position.set(.12,1.64,.25);scene.add(key,fill);
-camera.position.set(0,1.615,.43);camera.lookAt(0,1.612,.01);
+frameCamera(camera,2);
 const ctx=$('hologram').getContext('2d');
 const params=new URLSearchParams(location.search);
 let wideMotion=false,pointerX=0,pointerY=0;
@@ -45,7 +46,7 @@ const comparison=document.createElement('a');comparison.href='?model=mpfb&varian
 window.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select,[contenteditable]'))return;if(e.key.toLowerCase()==='h'){toggleControls();return;}if(e.key==='Escape'&&!$('trialControls').hidden)toggleControls();});
 function chooseExpression(name){expression=name;$('expressionHud').textContent=name.toUpperCase();document.querySelectorAll('[data-expression]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.expression===name)));hudDirty=true;wake();}
 document.querySelectorAll('[data-expression]').forEach(b=>b.onclick=()=>chooseExpression(b.dataset.expression));
-function beginBlink(automatic=false){clearTimeout(blinkTimer);elapsed=(performance.now()-start)/1000;blinkAt=elapsed;blinkPeak=0;const speed=$('slowBlink').checked?4:1;blinkClose=(.065+Math.random()*.02)*speed;blinkHold=.045*speed;blinkOpen=(.15+Math.random()*.035)*speed;nextBlink=elapsed+(automatic&&Math.random()<.1?.48:3+Math.random()*4);wake();}
+function beginBlink(automatic=false){clearTimeout(blinkTimer);elapsed=(performance.now()-start)/1000;blinkAt=elapsed;blinkPeak=0;const speed=$('slowBlink').checked?4:1;blinkClose=(.055+Math.random()*.01)*speed;blinkHold=.015*speed;blinkOpen=(.12+Math.random()*.02)*speed;nextBlink=elapsed+(automatic&&Math.random()<.1?.48:3+Math.random()*4);wake();}
 function scheduleBlink(){clearTimeout(blinkTimer);if($('autoBlink').checked&&!document.hidden&&!hudTrial.isOpen)blinkTimer=setTimeout(()=>beginBlink(true),Math.max(50,(nextBlink-elapsed)*1000));}
 $('blink').onclick=()=>beginBlink();$('autoBlink').onchange=()=>{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;scheduleBlink();};
 function stopReplay(){replayStart=null;$('replay').textContent='Replay turn';}
@@ -57,14 +58,21 @@ stage.addEventListener('pointermove',e=>{if(replayStart!==null||hudTrial.isOpen|
 stage.addEventListener('pointerleave',()=>{pointerX=pointerY=0;if(replayStart===null)tx=ty=0;wake();});
 document.addEventListener('hud-center',()=>{stopReplay();pointerX=pointerY=tx=ty=x=y=gx=gy=0;wake();});
 document.addEventListener('hud-panel',e=>{if(e.detail.open){stopReplay();tx=ty=0;clearTimeout(blinkTimer);}else{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;}wake();});
-function resize(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.min(1,960/w,600/h);renderer.setPixelRatio(scale);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();$('hologram').width=Math.round(w*scale);$('hologram').height=Math.round(h*scale);hudDirty=true;wake();}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.min(1,960/w,600/h);renderer.setPixelRatio(scale);renderer.setSize(w,h,false);frameCamera(camera,w/h);stage.dataset.cameraDistance=camera.position.z.toFixed(3);$('hologram').width=Math.round(w*scale);$('hologram').height=Math.round(h*scale);hudDirty=true;wake();}
 new ResizeObserver(resize).observe(stage);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;clearTimeout(blinkTimer);}else{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;wake();scheduleBlink();}});
 function surface(material,eye){
   material.onBeforeCompile=shader=>{
     shader.uniforms.gaze=gaze;shader.uniforms.closure=closure;shader.uniforms.lidTexture={value:lidTexture};shader.uniforms.lidReady=lidReady;
     shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 faceLocal;').replace('#include <begin_vertex>','#include <begin_vertex>\nfaceLocal=position;');
-    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\nvarying vec3 faceLocal;\nuniform vec2 gaze;\nuniform vec2 closure;\nuniform sampler2D lidTexture;\nuniform float lidReady;`);
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>\nvarying vec3 faceLocal;\nuniform vec2 gaze;\nuniform vec2 closure;\nuniform sampler2D lidTexture;\nuniform float lidReady;
+float lidCoverage(vec2 point,vec2 center,float amount){
+  if(amount<0.001)return 0.;
+  vec2 d=point-center;
+  float arch=sqrt(max(0.,1.-pow(d.x/.015,2.)));
+  float edge=mix(.008*arch+.002,-.006*arch-.002,amount);
+  return mix(smoothstep(edge-.00065,edge+.00065,d.y),1.,smoothstep(.88,1.,amount))*smoothstep(0.,.12,amount);
+}`);
     if(eye){
       const left=eye==='EyeLeft';
       shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`
@@ -81,8 +89,8 @@ function surface(material,eye){
       vec2 lidUv=(photoUv+vec2(0.0,0.016)-vec2(0.30,0.43))/vec2(0.42,0.23);
       vec4 shutColor=texture2D(lidTexture,lidUv);
       shutColor.rgb*=vec3(0.73,0.64,0.58);
-      float amount=lidReady*closure.${left?'x':'y'}*frontMask;
-      float wipe=amount>0.999?1.0:smoothstep(-0.004,0.004,amount*0.044-0.023-delta.y);
+      float amount=closure.${left?'x':'y'};
+      float wipe=lidCoverage(faceLocal.xy,vec2(${left?'-.02691':'.03003'},1.6252),amount);
       diffuseColor*=mix(openColor,shutColor,wipe*frontMask*lidReady);
       #endif`);
     }
@@ -97,7 +105,7 @@ function surface(material,eye){
         (1.095-((faceLocal.y-1.626)/0.78+0.925))/0.31);
       vec2 lidUv=(photoUv+vec2(0.0,0.016)-vec2(0.30,0.43))/vec2(0.42,0.23);
       vec4 shut=texture2D(lidTexture,lidUv);shut.rgb*=vec3(0.73,0.64,0.58);
-      diffuseColor*=mix(skin,shut,side*lidMask*lidReady);
+      diffuseColor*=mix(skin,shut,lidCoverage(faceLocal.xy,eyeCenter,side)*lidMask*lidReady);
       #endif`);
     }
     shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`float front=smoothstep(-0.010,0.050,faceLocal.z);
@@ -107,7 +115,7 @@ function surface(material,eye){
       outgoingLight*=front*sides*bottom*top;
       #include <opaque_fragment>`);
   };
-  material.customProgramCacheKey=()=>`nathang30-v5-${eye||'face'}`;
+  material.customProgramCacheKey=()=>`nathang30-v6-${eye||'face'}`;
 }
 new GLTFLoader().load('./assets/nathang30-head.glb',gltf=>{
   const model=gltf.scene;model.position.copy(pivot.position).multiplyScalar(-1);pivot.add(model);
@@ -130,7 +138,7 @@ function frame(now){
   // Keep the small photo gaze within the fitted eye surfaces; large direction
   // changes come from the actual head geometry, not sliding photo plates.
   gaze.value.set(THREE.MathUtils.clamp(gx-x*.75,-1,1),gy-y*.5);
-  const age=elapsed-blinkAt,bl=holdBlink?1:blinkWeight(age),br=holdBlink?1:blinkWeight(age-.006);closure.value.set(bl,br);blinkPeak=Math.max(blinkPeak,Math.min(bl,br));
+  const age=elapsed-blinkAt,bl=holdBlink?1:blinkWeight(age),br=bl;closure.value.set(bl,br);blinkPeak=Math.max(blinkPeak,Math.min(bl,br));
   const goal=expressions[expression];let changing=false;
   new Set([...Object.keys(mix),...Object.keys(goal)]).forEach(k=>{mix[k]=(mix[k]||0)+((goal[k]||0)-(mix[k]||0))*(1-Math.exp(-dt*10));if(Math.abs((goal[k]||0)-mix[k])>.001)changing=true;});
   meshes.forEach(m=>{if(m.morphTargetDictionary)Object.entries(m.morphTargetDictionary).forEach(([name,i])=>m.morphTargetInfluences[i]=name==='eyeBlinkLeft'?bl:name==='eyeBlinkRight'?br:mix[name]||0);});

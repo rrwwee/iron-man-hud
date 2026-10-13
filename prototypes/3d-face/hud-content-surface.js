@@ -1,6 +1,7 @@
 // Disposable curved-content trial: one 64-triangle sheet and one small canvas texture.
 // The hidden native document supplies text layout, semantics, links and scrolling.
 import * as THREE from 'three';
+import {visorDepth} from './visor-space.js?v=visor-2';
 
 export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClose}){
   const root=document.createElement('section');root.id='hudContent';root.dataset.ui='';root.className='hud-content-access';root.hidden=true;root.setAttribute('role','region');
@@ -68,7 +69,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
     h=isAudio ? 168 : isVideo ? 360 : 460;
     for(let row=0;row<2;row++)for(let i=0;i<=32;i++)geometry.attributes.uv.setY(row*33+i,1-row*h/canvas.height);
     geometry.attributes.uv.needsUpdate=true;contentWidth=isVideo||isAudio ? .105 : .098;
-    destination.set(.062,isAudio ? -.002 : isVideo ? .014 : .017,.115);
+    destination.set(.045,isAudio ? -.002 : isVideo ? .014 : .017,.115);
     material.blending=isVideo||isAudio?THREE.CustomBlending:THREE.NormalBlending;
     material.premultipliedAlpha=isVideo||isAudio;material.blendSrc=THREE.OneFactor;material.blendDst=THREE.OneMinusSrcColorFactor;
     material.blendSrcAlpha=THREE.OneFactor;material.blendDstAlpha=THREE.OneMinusSrcAlphaFactor;material.needsUpdate=true;
@@ -171,7 +172,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,onClos
   function surfacePoint(u,v){
     const expansion=.08+.92*amount,width=contentWidth*expansion;
     const x=destination.x+(u*canvas.width/640-.5)*width,y=destination.y+(0.5-v)*width*h/640;
-    const z=.14+Math.sqrt(.225*.225-x*x)-.225-.025;
+    const z=visorDepth(x,y);
     return point.set(x,y,z).lerp(origin,1-amount);
   }
   function tick(){

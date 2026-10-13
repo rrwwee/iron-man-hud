@@ -1,6 +1,6 @@
-import {createHUDVolumes} from './hud-volumes.js?v=optics-2';
-import {createHUDContentSurface} from './hud-content-surface.js?v=optics-2';
-import {createVisorMenu} from './visor-menu-3d.js?v=optics-2';
+import {createHUDVolumes} from './hud-volumes.js?v=visor-2';
+import {createHUDContentSurface} from './hud-content-surface.js?v=visor-2';
+import {createVisorMenu} from './visor-menu-3d.js?v=visor-2';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
   {id:'about',label:'About',kind:'Text',title:'A little about me',html:'<h1>About</h1><p>A collection of projects, notes, sound and places.</p><p>Explore the globe for the places I have lived, studied and coached sailing.</p><h2>Behind the HUD</h2><p><a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">Source code</a></p><p>Face: Tony Stark by <a href="https://sketchfab.com/3d-models/tony-stark-86c267264a2e4903b8c2bcc1b972cb74" target="_blank" rel="noopener noreferrer">Nathang30</a>, CC BY-NC-SA 4.0.</p><p>Armor: Iron man Mark 7 armors by <a href="https://blendswap.com/blend/6708" target="_blank" rel="noopener noreferrer">2iemniak</a>, CC BY 3.0, noncommercial fan art. Models modified for this HUD.</p><p>Globe outlines: Natural Earth, public domain.</p>',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
