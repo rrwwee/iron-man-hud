@@ -1,6 +1,6 @@
-import {createHUDVolumes} from './hud-volumes.js?v=volume-5';
-import {createHUDContentSurface} from './hud-content-surface.js?v=volume-5';
-import {createVisorMenu} from './visor-menu-3d.js?v=volume-5';
+import {createHUDVolumes} from './hud-volumes.js?v=optics-2';
+import {createHUDContentSurface} from './hud-content-surface.js?v=optics-2';
+import {createVisorMenu} from './visor-menu-3d.js?v=optics-2';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
   {id:'about',label:'About',kind:'Text',title:'A little about me',html:'<h1>About</h1><p>A collection of projects, notes, sound and places.</p><p>Explore the globe for the places I have lived, studied and coached sailing.</p><h2>Behind the HUD</h2><p><a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">Source code</a></p><p>Face: Tony Stark by <a href="https://sketchfab.com/3d-models/tony-stark-86c267264a2e4903b8c2bcc1b972cb74" target="_blank" rel="noopener noreferrer">Nathang30</a>, CC BY-NC-SA 4.0.</p><p>Armor: Iron man Mark 7 armors by <a href="https://blendswap.com/blend/6708" target="_blank" rel="noopener noreferrer">2iemniak</a>, CC BY 3.0, noncommercial fan art. Models modified for this HUD.</p><p>Globe outlines: Natural Earth, public domain.</p>',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
@@ -75,7 +75,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     if(eye){const gain=strength===0?0:Math.min(1,strength*.45),ex=eye.restX+(eye.x-eye.restX)*gain,ey=eye.restY+(eye.y-eye.restY)*gain;
       ocular.style.transform=`translate3d(${(ex-36).toFixed(1)}px,${(ey-36).toFixed(1)}px,0)`;}
     spatial?.setEnabled(active&&spatialMode);spatial?.setPose(x,y,strength,modal);
-    volumes?.tick();spatial?.setSuitState(stage.dataset.suitExploded==='true');contentSurface?.tick();layer.dataset.follow=follow;
+    volumes?.tick(x,y);spatial?.setSuitState(stage.dataset.suitExploded==='true');contentSurface?.tick();layer.dataset.follow=follow;
   }
   function close(){
     if(contentSurface?.isOpen){contentSurface.close();return;}
@@ -135,6 +135,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
       if(slot==='place-next'){volumes.step(1);return;}
       if(slot==='place-open'){volumes.open();return;}
       if(typeof slot==='string'&&slot.startsWith('place:')){volumes.select(Number(slot.slice(6)));return;}
+      if(slot==='optic'){volumes.focusOptic();return;}
       if(slot==='suit'){volumes.explode();return;}
       if(slot==='suit-left'||slot==='suit-right'){volumes.turnSuit(slot==='suit-left'?-.4:.4);return;}
       if(typeof slot==='string'&&slot.startsWith('kind:')){
@@ -150,7 +151,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
     contentSurface=createHUDContentSurface({scene,stage,camera,wake,getFrame:()=>spatial.frame,onClose:()=>{opened=null;spatial.setContentOpen(false);volumes?.setContentOpen(false);previousFocus?.focus();}});
     volumes=createHUDVolumes({scene,camera,stage,wake,getFrame:()=>spatial.frame,onSelection:(index,places)=>{currentPlace=places[index];spatial.setLocationState(index,places);const output=accessibleShortcuts?.querySelector('output');if(output)output.textContent=currentPlace.label+' — '+currentPlace.role;},onPlace:place=>open({id:'place-'+place.id,kind:'Text',label:place.label,title:place.title,html:`<h1>${place.title}</h1><p>${place.text}</p><p><a href="https://www.openstreetmap.org/#map=12/${place.lat}/${place.lon}" target="_blank" rel="noopener noreferrer">Explore ${place.label} on the map</a></p>`,paragraphs:[place.text]},document.activeElement)});
     accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.id='instrumentControls';accessibleShortcuts.setAttribute('aria-label','Places and armor');layer.append(accessibleShortcuts);
-    [['place-prev','Previous place'],['place-next','Next place'],['place-open','Open selected place'],['suit','Separate or assemble armor'],['suit-left','Rotate armor left'],['suit-right','Rotate armor right']].forEach(([key,label])=>{
+    [['optic','Focus optic'],['place-prev','Previous place'],['place-next','Next place'],['place-open','Open selected place'],['suit','Separate or assemble armor'],['suit-left','Rotate armor left'],['suit-right','Rotate armor right']].forEach(([key,label])=>{
       const b=document.createElement('button');b.textContent=label;b.dataset.control=key;b.onclick=()=>chooseTarget(key);b.onfocus=()=>spatial.focus(key);b.onblur=()=>spatial.focus(null);accessibleShortcuts.append(b);
     });
     const placeOutput=document.createElement('output');placeOutput.setAttribute('aria-live','polite');placeOutput.textContent=currentPlace?.label+' — '+currentPlace?.role;accessibleShortcuts.append(placeOutput);

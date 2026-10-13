@@ -21,25 +21,27 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   let locationIndex=6,locations=[],suitExploded=false,lastLocationWheel=0;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sheets=[];
+  const surfaceZ=(x,y,name)=>name==='radial'
+    ? .115+Math.sqrt(Math.max(.001,.18*.18-x*x-(y-1.619)*(y-1.619)))-.18
+    : .14+Math.sqrt(.225*.225-x*x)-.225-.025;
   function sheet(width,height,bounds,name){
     const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
     const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;
-    const positions=[],uv=[],indices=[],segments=32;
-    for(let row=0;row<2;row++)for(let i=0;i<=segments;i++){
-      const u=i/segments,x=THREE.MathUtils.lerp(bounds[0],bounds[1],u),y=row?bounds[2]:bounds[3];
-      // The panel wraps around the vertical axis, its edges receding toward the temples.
-      positions.push(x,y-1.619,.14+Math.sqrt(.225*.225-x*x)-.225-.025);
-      uv.push(u,1-row);
+    const positions=[],uv=[],indices=[],segments=32,rows=name==='radial'?12:1;
+    for(let row=0;row<=rows;row++)for(let i=0;i<=segments;i++){
+      const u=i/segments,v=row/rows,x=THREE.MathUtils.lerp(bounds[0],bounds[1],u),y=THREE.MathUtils.lerp(bounds[3],bounds[2],v);
+      positions.push(x,y-1.619,surfaceZ(x,y,name));uv.push(u,1-v);
     }
-    for(let i=0;i<segments;i++){const a=i,b=i+1,c=i+segments+1,d=c+1;indices.push(a,c,b,b,c,d);}
+    for(let row=0;row<rows;row++)for(let i=0;i<segments;i++){const a=row*(segments+1)+i,b=a+1,c=a+segments+1,d=c+1;indices.push(a,c,b,b,c,d);}
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);geometry.computeVertexNormals();
     const material=new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,forceSinglePass:true,depthWrite:false,depthTest:false,toneMapped:false});
     const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.renderOrder=100;group.add(mesh);
     const result={canvas,ctx:canvas.getContext('2d'),texture,mesh,bounds,name};sheets.push(result);return result;
   }
-  const left=sheet(512,640,[-.137,-.025,1.548,1.684],'radial');
+  const left=sheet(512,640,[-.145,-.024,1.547,1.683],'radial');
   const right=sheet(512,360,[.049,.136,1.607,1.643],'places');
-  const channels=sheet(512,320,[.052,.137,1.548,1.6],'channels');
+  const channels=sheet(512,320,[.052,.137,1.544,1.6],'channels');
+  right.mesh.visible=false; // The places now live on the globe's actual annulus.
   const cx=62,cy=320,step=.48;
 
   const colors={cyan:'#a3e7f0',dim:'#548793',white:'#e0faff',amber:'#f2c18f'};
@@ -70,30 +72,23 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
       arc(c,cx,cy,269,a-.215,a+.215,tint,hot?3:chosen?2:1,hot?10:chosen?6:0);
       const lx=cx+Math.cos(a)*236,ly=cy+Math.sin(a)*236;
       c.save();c.translate(lx,ly);c.rotate(a*.22);
-      text(c,item.label,0,-2,slot===2?19:16,tint,'center');text(c,item.kind==='External'?'VISIT SITE ↗':item.kind.toUpperCase(),0,15,8,hot?colors.white:colors.dim,'center');c.restore();
-      const mx=cx+Math.cos(a)*323,my=cy+Math.sin(a)*323;
-      stroke(c,chosen?colors.amber:colors.dim,.8,p=>{p.moveTo(cx+Math.cos(a)*273,cy+Math.sin(a)*273);p.lineTo(mx-10,my);p.lineTo(mx+41,my);},chosen?5:0);
-      text(c,glyphs[item.kind],mx,my-9,13,tint);text(c,itemDetail(item),mx,my+13,9,colors.cyan);
+      text(c,item.label,0,4,slot===2?19:16,tint,'center');c.restore();
+      const mx=cx+Math.cos(a)*315,my=cy+Math.sin(a)*315;
+      stroke(c,chosen?colors.amber:colors.dim,.8,p=>{p.moveTo(cx+Math.cos(a)*273,cy+Math.sin(a)*273);p.lineTo(mx-10,my);p.lineTo(mx+12,my);},chosen?5:0);
+      text(c,glyphs[item.kind],mx,my-6,11,tint);
       if(hot)stroke(c,colors.white,1,p=>{p.moveTo(lx+68,ly);p.lineTo(lx+84,ly);p.lineTo(lx+90,ly-6);},4);
     }
     text(c,'BROWSE',cx-10,cy-26,8,colors.dim);text(c,String(state.selected+1).padStart(2,'0'),cx-13,cy+8,33,colors.white);
     text(c,`/ ${String(state.entries.length).padStart(2,'0')}`,cx-9,cy+26,9,colors.dim);
     if(radialMoving)arc(c,cx,cy,308,-.8+radialOffset,.8+radialOffset,colors.amber,2,5);
-    text(c,'SCROLL TO SELECT',85,22,8,colors.cyan);text(c,'CLICK TO OPEN',85,37,7,colors.dim);
+
     left.texture.needsUpdate=true;
   }
-  function previewPaint(){
-    if(!locations.length)return;const c=right.ctx;c.clearRect(0,0,512,360);const current=locations[locationIndex],prev=locations[(locationIndex+locations.length-1)%locations.length],next=locations[(locationIndex+1)%locations.length];
-    text(c,'Places',256,30,13,colors.dim,'center');text(c,'⌃  '+prev.label,256,76,17,colors.dim,'center');
-    arc(c,256,167,180,3.4,3.9,colors.cyan,1);arc(c,256,167,180,-.75,-.22,colors.cyan,1);
-    text(c,current.label,256,153,28,colors.white,'center');text(c,current.role,256,183,14,colors.amber,'center');
-    for(let i=0;i<locations.length;i++){const x=208+i*16;c.fillStyle=i===locationIndex?colors.amber:colors.dim;c.beginPath();c.arc(x,224,i===locationIndex?4:2,0,Math.PI*2);c.fill();}
-    text(c,next.label+'  ⌄',256,278,17,colors.dim,'center');text(c,'Scroll places · click for story',256,330,12,colors.cyan,'center');right.texture.needsUpdate=true;
-  }
+  function previewPaint(){} // Location labels are part of the 3D annulus.
   function channelPaint(){
-    const c=channels.ctx;c.clearRect(0,0,512,320);text(c,'Mark VII',26,22,16,colors.cyan);
+    const c=channels.ctx;c.clearRect(0,0,512,320);text(c,'VII',26,22,12,colors.cyan);
     stroke(c,colors.dim,.8,p=>{p.moveTo(15,35);p.lineTo(70,35);p.moveTo(480,35);p.lineTo(495,35);p.lineTo(495,79);p.moveTo(15,225);p.lineTo(15,281);p.lineTo(78,281);});
-    text(c,suitExploded?'Assemble armor':'Separate armor',256,295,16,colors.amber,'center');text(c,'Drag to inspect',256,316,10,colors.dim,'center');channels.texture.needsUpdate=true;
+    text(c,suitExploded?'Assemble':'Explode',256,295,16,colors.amber,'center');channels.texture.needsUpdate=true;
   }
   function tick(){
     if(radialMoving){const t=Math.min(1,(performance.now()-radialStart)/300);radialOffset=radialFrom*Math.pow(1-t,3);radialMoving=t<1;radialPaint();}
@@ -138,7 +133,7 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
   },{passive:false});
   function project(x,y,s){
     const xx=THREE.MathUtils.lerp(s.bounds[0],s.bounds[1],x/s.canvas.width),yy=THREE.MathUtils.lerp(s.bounds[3],s.bounds[2],y/s.canvas.height);
-    projected.set(xx,yy-1.619,.14+Math.sqrt(.225*.225-xx*xx)-.225-.025).applyMatrix4(group.matrixWorld).project(camera);
+    projected.set(xx,yy-1.619,surfaceZ(xx,yy,s.name)).applyMatrix4(group.matrixWorld).project(camera);
     const rect=stage.getBoundingClientRect();return {x:Math.round(rect.left+(projected.x+1)*stage.clientWidth/2),y:Math.round(rect.top+(1-projected.y)*stage.clientHeight/2)};
   }
   return {
@@ -154,14 +149,14 @@ export function createVisorMenu({scene,camera,stage,wake,onChoose,onBrowse}){
       camera.updateMatrixWorld();group.rotation.set(y*.12*gain,x*.61*gain,0,'YXZ');group.updateMatrixWorld(true);
       if(blocked)setHover(null);else if(mouse)setHover(hitAt(...mouse));
       // Readable debug state for inspecting the actual projected targets and workload.
-      stage.dataset.hudYaw=(x*35*gain).toFixed(1);stage.dataset.hudFollowGain=String(gain);stage.dataset.hudDrawCalls=String(group.visible?sheets.filter(s=>s.mesh.visible).length+1:0);stage.dataset.hudTriangles=String(group.visible?sheets.filter(s=>s.mesh.visible).length*64+2:0);stage.dataset.hudTextureBytes=String((512*640+512*512+512*320)*4);
+      stage.dataset.hudYaw=(x*35*gain).toFixed(1);stage.dataset.hudFollowGain=String(gain);stage.dataset.hudDrawCalls=String(group.visible?sheets.filter(s=>s.mesh.visible).length+1:0);stage.dataset.hudTriangles=String(group.visible?sheets.filter(s=>s.mesh.visible).reduce((n,s)=>n+s.mesh.geometry.index.count/3,0)+2:0);stage.dataset.hudTextureBytes=String((512*640+512*512+512*320)*4);
       stage.dataset.hudTargets=JSON.stringify(Array.from({length:5},(_,slot)=>{const a=(slot-2)*step+radialOffset;return {...project(cx+Math.cos(a)*236,cy+Math.sin(a)*236,left),slot,label:state?.entries[(state.selected+slot-2+state.entries.length)%state.entries.length].label};}));
       stage.dataset.hudSuitAction=JSON.stringify(project(256,295,channels));
       stage.dataset.hudPlaceTargets=JSON.stringify({previous:project(256,76,right),open:project(256,154,right),next:project(256,278,right)});
 
     },
     get frame(){return group.matrixWorld;},
-    setContentOpen(value){right.mesh.visible=!value;wake();},
+    setContentOpen(value){wake();},
     contentAnchor(which){
       const s=which==='preview'?right:left,px=which==='preview'?256:cx+236,py=which==='preview'?256:cy;
       const xx=THREE.MathUtils.lerp(s.bounds[0],s.bounds[1],px/s.canvas.width),yy=THREE.MathUtils.lerp(s.bounds[3],s.bounds[2],py/s.canvas.height);
