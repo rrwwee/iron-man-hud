@@ -1,7 +1,7 @@
 // Disposable candidate: Nathang30 geometry/UVs, authored local expression controls.
 import * as THREE from 'three';
 import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
-import { createHUDTrial } from './hud-trial.js?v=curved-3';
+import { createHUDTrial } from './hud-trial.js?v=rich-2';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});
@@ -47,9 +47,8 @@ for(const [label,value] of [['Turn left',-1],['Turn right',1]]){const b=document
 const held=document.createElement('button');held.textContent='Hold blink';held.setAttribute('aria-pressed','false');held.onclick=()=>{holdBlink=!holdBlink;held.setAttribute('aria-pressed',String(holdBlink));wake();};document.querySelector('.actions').append(held);
 $('center').onclick=()=>{stopReplay();tx=ty=x=y=gx=gy=0;wake();};
 $('replay').onclick=()=>{if(replayStart!==null){stopReplay();wake();return;}replayStart=(performance.now()-start)/1000;$('replay').textContent='Stop replay';wake();};
-stage.addEventListener('pointermove',e=>{if(replayStart!==null||hudTrial.isOpen||hudTrial.isHovering||e.target.closest('[data-ui]'))return;const r=stage.getBoundingClientRect();tx=THREE.MathUtils.clamp((e.clientX-r.left)/r.width*2-1,-1,1);ty=THREE.MathUtils.clamp((e.clientY-r.top)/r.height*2-1,-1,1);wake();});
+stage.addEventListener('pointermove',e=>{if(replayStart!==null||hudTrial.isOpen||e.target.closest('#contentPanel'))return;const r=stage.getBoundingClientRect();tx=THREE.MathUtils.clamp((e.clientX-r.left)/r.width*2-1,-1,1);ty=THREE.MathUtils.clamp((e.clientY-r.top)/r.height*2-1,-1,1);wake();});
 stage.addEventListener('pointerleave',()=>{if(replayStart===null)tx=ty=0;wake();});
-document.addEventListener('hud-hover',e=>{if(e.detail.hovering){stopReplay();tx=x;ty=y;wake();}});
 document.addEventListener('hud-center',()=>{stopReplay();tx=ty=x=y=gx=gy=0;wake();});
 document.addEventListener('hud-panel',e=>{if(e.detail.open){stopReplay();tx=ty=0;clearTimeout(blinkTimer);}else{elapsed=(performance.now()-start)/1000;nextBlink=elapsed+4;}wake();});
 function resize(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.min(1,960/w,600/h);renderer.setPixelRatio(scale);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();$('hologram').width=Math.round(w*scale);$('hologram').height=Math.round(h*scale);hudDirty=true;wake();}

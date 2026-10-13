@@ -1,4 +1,4 @@
-import {createVisorMenu} from './visor-menu-3d.js?v=curved-3';
+import {createVisorMenu} from './visor-menu-3d.js?v=rich-2';
 // Disposable interaction trial. The entries below are explicitly sample content.
 const entries=[
   {id:'about',label:'About',kind:'Text',title:'A little about me',paragraphs:['This is a placeholder for your introduction. It could be a short hello, what you work on, and what you are curious about.','The point of this trial is the experience of opening, reading and closing content inside the HUD. The biography and section names are still yours to choose.']},
@@ -41,7 +41,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   dialog.innerHTML='<div class="content-panel-head"><div><small id="contentKind"></small><h1 id="contentTitle"></h1></div><button id="closeContent" aria-label="Close content">×</button></div><div id="contentBody" class="content-panel-body"></div><p class="content-sample">Sample content · section names and media are still to be chosen</p>';
   stage.append(dialog);
   let selected=0,active=true,opened=null,modal=false,previousFocus=null,lastWheel=0,follow='subtle',lastTransform='',lastPose=[0,0];
-  let spatial=null,spatialMode=!!scene&&new URLSearchParams(location.search).get('hudSpace')!=='flat';
+  let spatial=null,accessibleShortcuts=null,spatialMode=!!scene&&new URLSearchParams(location.search).get('hudSpace')!=='flat';
   const followControl=document.getElementById('hudFollow');
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){follow='fixed';followControl.value='fixed';}
   const modeButton=document.getElementById('hudMode');
@@ -125,17 +125,28 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
   });
   nav.tabIndex=0;
   function setActive(value){
-    active=value;nav.hidden=preview.hidden=!active;ocular.style.display=active?'':'none';document.body.dataset.navigation=active?'radial':'visual';followControl.closest('label').hidden=!active;
+    active=value;nav.hidden=preview.hidden=!active;if(accessibleShortcuts)accessibleShortcuts.hidden=!active||!spatialMode;ocular.style.display=active?'':'none';document.body.dataset.navigation=active?'radial':'visual';followControl.closest('label').hidden=!active;
     modeButton.textContent=active?'Visuals only':'Try the menu';if(!active&&opened)close();setPose(...lastPose);invalidate();wake();
   }
   modeButton.onclick=()=>{setActive(!active);const u=new URL(location.href);u.searchParams.set('mode',active?'menu':'visual');history.replaceState(null,'',u);};
   if(scene){
-    spatial=createVisorMenu({scene,camera,stage,wake,onBrowse:browse,onChoose:slot=>{
+    function chooseTarget(slot){
+      if(typeof slot==='string'&&slot.startsWith('kind:')){
+        const kind=slot.slice(5);let next=selected;
+        for(let i=1;i<=entries.length;i++){const j=(selected+i)%entries.length;if(entries[j].kind===kind){next=j;break;}}
+        selected=next;refresh();return;
+      }
+      if(typeof slot==='string'&&slot.startsWith('jump:')){selected=Number(slot.slice(5));refresh();return;}
       const index=slot==='preview'?selected:(selected+slot-2+entries.length)%entries.length;
       selected=index;refresh();open(entries[index],buttons.find(b=>b.dataset.entry===entries[index].id));
-    },onHover:hovering=>document.dispatchEvent(new CustomEvent('hud-hover',{detail:{hovering}}))});
+    }
+    spatial=createVisorMenu({scene,camera,stage,wake,onBrowse:browse,onChoose:chooseTarget});
+    accessibleShortcuts=document.createElement('div');accessibleShortcuts.className='spatial-shortcuts';accessibleShortcuts.dataset.ui='';accessibleShortcuts.setAttribute('role','group');accessibleShortcuts.setAttribute('aria-label','Preview and format shortcuts');layer.append(accessibleShortcuts);
+    [...entries.map((e,i)=>[`jump:${i}`,`Preview ${e.label}`]),...['Text','Video','Audio','External'].map(kind=>[`kind:${kind}`,`Browse ${kind==='External'?'links':kind}`])].forEach(([key,label])=>{
+      const b=document.createElement('button');b.textContent=label;b.onclick=()=>chooseTarget(key);b.onfocus=()=>spatial.focus(key);b.onblur=()=>spatial.focus(null);accessibleShortcuts.append(b);
+    });
     const depthButton=document.createElement('button');depthButton.id='hudDepth';document.querySelector('.hud-choice-buttons').prepend(depthButton);
-    function setDepth(value){spatialMode=value;document.body.classList.toggle('spatial-hud',value);depthButton.textContent=value?'Compare flat HUD':'Try curved 3D';depthButton.setAttribute('aria-pressed',String(value));spatial.setEnabled(active&&value);setPose(...lastPose);invalidate();wake();}
+    function setDepth(value){spatialMode=value;accessibleShortcuts.hidden=!active||!value;document.body.classList.toggle('spatial-hud',value);depthButton.textContent=value?'Compare flat HUD':'Try curved 3D';depthButton.setAttribute('aria-pressed',String(value));spatial.setEnabled(active&&value);setPose(...lastPose);invalidate();wake();}
     depthButton.onclick=()=>{setDepth(!spatialMode);const url=new URL(location.href);url.searchParams.set('hudSpace',spatialMode?'curved':'flat');history.replaceState(null,'',url);};
     buttons.forEach((b,i)=>{b.addEventListener('focus',()=>spatial.focus(i));b.addEventListener('blur',()=>spatial.focus(null));});
     preview.addEventListener('focus',()=>spatial.focus('preview'));preview.addEventListener('blur',()=>spatial.focus(null));setDepth(spatialMode);

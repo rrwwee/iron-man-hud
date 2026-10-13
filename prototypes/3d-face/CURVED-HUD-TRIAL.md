@@ -14,8 +14,8 @@ Open http://127.0.0.1:4188/?variant=visor&mode=menu&hudSpace=curved
 
 - **Compare flat HUD** switches to the preceding SVG treatment on the same route. `hudSpace=flat` links directly to it.
 - Move over the Face to turn it. The curved menu and preview follow its yaw and pitch. The Subtle setting follows 65% of the Face rotation; Stronger follows 100%; Fixed leaves the visor at rest. These are trial choices, not measured movie ratios.
-- Hover a sector: it brightens and the Face stops chasing the pointer. Clicking opens that section. Dragging does not activate it.
-- Scroll over either instrument to cycle through the six sample entries. The right instrument previews and opens the selection.
+- Hover a sector: it brightens while the Face and HUD continue following the pointer. Clicking opens that section. The pressed target is retained through small HUD motion until release; dragging does not activate it.
+- Scroll over an instrument to cycle through the six sample entries. The right instrument previews and opens the selection. Its rim and the inner left ring select entries directly. The lower-right channel dial selects the next entry of a format; repeat Text to cycle its three entries.
 - Keyboard navigation uses the same underlying menu controls. Up/down browse; Tab focuses a sector or preview; Enter/Space opens it. The corresponding 3D sector shows focus. Escape closes a Panel and restores focus.
 - H opens Face controls. Turn left/right holds a ±35° view; Center restores front view. The eye reticle also centers the Face.
 
@@ -31,7 +31,7 @@ The browser showed animated frames in all three. The interpretation here is thin
 
 ## Construction and budget
 
-`visor-menu-3d.js` creates two cylindrical surface strips, with 32 horizontal segments each. Canvas textures contain the actual navigation and selected-item preview, with glow baked only when interaction changes. The material is unlit, transparent and single-pass; geometry and raycast hit areas share the same curved surfaces. Ray hits are mapped from mesh UV coordinates to the sector/preview actions. Existing semantic controls and content Panels are reused.
+`visor-menu-3d.js` creates three cylindrical surface strips, with 32 horizontal segments each. Canvas textures contain the navigation, selected-item preview and format browser, with glow baked only when interaction changes. The material is unlit, transparent and single-pass; geometry and raycast hit areas share the same curved surfaces. Ray hits are mapped from mesh UV coordinates to the sector/preview actions. Existing semantic controls and content Panels are reused.
 
 The Face still uses the accepted geometry, textures, lights and blink/expression controls. A tiny full-screen black vignette is rendered after the Face and before the visor, replacing the CSS darkening in curved mode so edge graphics remain luminous. Flat mode uses its previous CSS vignette.
 
@@ -39,21 +39,31 @@ Measured at the normal 1280×720 viewport:
 
 | Workload | Prior Face | Curved scene total |
 | --- | ---: | ---: |
-| WebGL draw calls | 3 | 6 |
-| Triangles | 6,545 | 6,675 |
+| WebGL draw calls | 3 | 7 |
+| Triangles | 6,545 | 6,739 |
 | Framebuffer pixels | 460,800 | 460,800 |
 
-The two HUD textures occupy 2,359,296 bytes (2.25 MiB) before driver overhead, without mipmaps. No new renderer, external runtime asset, font, shadow or postprocessing blur pass is added. The existing 30 fps motion cap and hidden-tab pause remain. A hover/selection updates the textures; head movement transforms geometry without repainting them. No extra animation timer or RAF is used. These are workload measurements, not an FPS guarantee on the user's computer.
+The three HUD textures occupy 3,014,656 bytes (2.875 MiB) before driver overhead, without mipmaps. No new renderer, external runtime asset, font, shadow or postprocessing blur pass is added. The existing 30 fps motion cap and hidden-tab pause remain. Hover changes and selections update the textures. Head movement transforms geometry; raycasting refreshes the current hover as a moving control passes under a stationary pointer. Textures are not repainted when the hit target stays the same. No extra animation timer or RAF is used. These are workload measurements, not an FPS guarantee on the user's computer.
 
 ## Browser checks
 
 - Native pointer click opened About from the curved sector at rest and at the right-turn extreme.
-- Native pointer hover highlighted a sector, held the pose and did not open content; dragging did not activate it.
+- Native pointer hover highlights controls without freezing the pose. Video remained hovered while measured head yaw advanced from 26.5° to 28.5°. Dragging does not activate content.
 - Mouse-wheel browsing worked at the left-turn extreme; clicking the projected preview there opened Selected work.
 - Keyboard down/Enter opened the Video Panel, and Escape restored navigation.
 - Both wide turns retained usable projected hit positions. The far instrument becomes narrower, as expected; legibility at the maximum angle is a user judgment still to make.
-- Flat/curved switching returned the scene to three/six draw calls respectively.
-- With auto-blink off, separated idle observations retained frame 160 and texture-paint count 24. Browser warnings/errors were empty.
+- Flat/curved switching remains available. The preceding two-surface revision measured three/six draw calls; this richer three-surface revision measures three/seven.
+- With auto-blink off, separated idle observations in the rich revision retained frame 99 and texture-paint count 14. Browser warnings/errors were empty.
 - Model budget audit, JavaScript syntax and Git whitespace checks pass.
 
 The suit inset remains separate, awaiting the real free mesh identified in [the source research](../../docs/research/free-suit-wireframe-assets.md). This pass does not reintroduce a drawn substitute.
+
+## Richer graphics revision
+
+The user asked for more visual density with every instrument useful, and rejected the previous hover freeze. The new third curved surface is a format browser. Its ring displays the real distribution of the six entries (three Text, one Video, one Audio and one link). Each channel selects/cycles matching entries; its label and ring segment are clickable.
+
+The main dial shows a short text excerpt, a video action, a link destination, or the peak envelope of the actual sample WAV, according to the selected entry. The waveform was extracted offline from `assets/menu-audio-sample.wav`; it is not simulated activity. Metadata connected to each left-hand sector reports its actual word count, media duration or destination. The two index rings provide direct access to all six entries, including the one outside the five-item radial viewport. Keyboard-accessible preview and format controls mirror these targets.
+
+Removed both mechanisms that stopped head movement on hover: the `isHovering` pointer guard and the `hud-hover` handler that set target pose to the current pose. The 3D hit test now runs on pose updates as well as pointer events. A click uses the item captured at pointer-down if the pointer stays within eight pixels and releases within 700 ms, preserving a click while geometry moves under it. Content Panels still retain their existing behavior.
+
+Browser checks in this revision covered native Video/Audio channel selection, audio playback, rim selection without opening a Panel, and keyboard Notes preview. On the narrow active app viewport the scene reported seven draw calls and 6,739 triangles. At 1280×720 the same revision reported seven draw calls, 6,739 triangles and 460,800 framebuffer pixels. `rich-hud-preview.png` records the centered composition. Browser warnings/errors were empty; syntax, the Face budget audit and whitespace checks passed.
