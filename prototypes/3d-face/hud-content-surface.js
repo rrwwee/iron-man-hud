@@ -1,3 +1,4 @@
+import {scrollDocumentKey} from './document-navigation.js';
 import {loadVideoMetadata} from './video-metadata.js?v=rory-29f';
 import {sectionLayouts,sectionPreviewPoint} from './hud-section-layouts.js?v=rory-29f';
 // Curved content framed inside the preview section or the larger right display.
@@ -111,6 +112,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,getRig
       if(next.html)article.innerHTML=next.html;
       else{const heading=document.createElement('h1');heading.textContent=next.title;article.append(heading);next.paragraphs.forEach(text=>{const p=document.createElement('p');p.textContent=text;article.append(p);});}
       body.append(article);
+      article.addEventListener('keydown',event=>scrollDocumentKey(event,article,scrollTo));
       // Short documents occupy only the space their content needs.
       const bottom=article.lastElementChild.getBoundingClientRect().bottom-article.getBoundingClientRect().top+28;
       if(!sectionLayouts[next.id])h=Math.min(h,Math.max(180,Math.ceil(bottom)));article.style.height=`${h}px`;destination.y=dock==='preview'?layout.preview[1]:layout.content[1];

@@ -111,7 +111,7 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
  function surface(id){let view;view=createHUDContentSurface({scene,stage,camera,wake,getFrame:()=>spatial.frame,getRightBoundary:()=>attitude?.rightBoundary??Infinity,id,onClose:()=>{if(view===expandedSurface)closeExpanded();}});return view;}
  attitude=createHUDAttitude({scene,camera,stage});
  volumes=createHUDVolumes({scene,camera,stage,wake,getFrame:()=>spatial.frame,getExpandedOffset:()=>expandedSurface?.layoutOffset??{x:0,y:0,z:0},getPreviewWeights:()=>previewMotion.weights,getActivity:()=>spatial.activity,getHUDTarget:(x,y)=>spatial.hitTarget(x,y)});
- window.addEventListener('keydown',e=>{if(moving())return;if(e.target.closest('input,textarea,select,[contenteditable]'))return;
+ window.addEventListener('keydown',e=>{if(moving())return;if(e.defaultPrevented||e.target.closest('input,textarea,select,[contenteditable]'))return;if(e.key!=='Escape'&&e.target.closest('.hud-document'))return;
    if(e.key==='ArrowLeft'||e.key==='Escape'){e.preventDefault();closeExpanded();}
    else if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();slots.browse(e.key==='ArrowUp'?-1:1);showLeft();}
    else if(e.key==='ArrowRight'){e.preventDefault();expand();}
