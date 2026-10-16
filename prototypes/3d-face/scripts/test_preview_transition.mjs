@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {createPreviewTransition} from '../hud-preview-transition.js';
+import {transferDuration} from '../hud-transfer.js';
+const p=createPreviewTransition('cv');p.select('about',0);
+assert.equal(p.sample(0).cv,1);assert.equal(p.sample(0).about,0);
+const half={...p.sample(180)};assert.ok(half.cv>0&&half.cv<1&&half.about>0&&half.about<1);
+p.select('globe',180);assert.deepEqual(p.sample(180),{...half,globe:0},'Rapid selection must start from the rendered blend');
+assert.equal(p.sample(800).globe,1);assert.equal(p.sample(800).cv,0);assert.equal(p.active,false);
+const e=createPreviewTransition('suit');e.select('globe',0,{at:0,kind:'expand'});
+assert.equal(e.sample(transferDuration*.45).globe,0,'New left content waits for the departing model to clear');
+assert.ok(e.sample(transferDuration*.60).globe>0);assert.equal(e.sample(transferDuration).globe,1);
+const r=createPreviewTransition('cv');r.select('globe',0,{at:0,kind:'return'});
+assert.equal(r.sample(208).cv,0,'Old left preview clears before the returning window arrives');
+assert.equal(r.sample(500).globe,0);assert.equal(r.sample(1040).globe,1);
+r.select('suit',1100,null,true);assert.deepEqual(r.weights,{suit:1});assert.equal(r.active,false);
+console.log('Preview transition: smooth handoffs, interrupted selections, transfer clearance and reduced motion pass.');

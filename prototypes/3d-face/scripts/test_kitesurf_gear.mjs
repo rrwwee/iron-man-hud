@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+const model=JSON.parse(await fs.readFile(new URL('../assets/kitesurf-gear.json',import.meta.url),'utf8'));
+assert.equal(model.id,'kitesurf-gear');
+assert.equal(model.publication,'original-geometry');
+assert.equal(model.wetsuit.item,'5370-A00-M');
+assert.equal(model.harness.size,'M');
+const categories=new Set(),bounds=[[Infinity,-Infinity],[Infinity,-Infinity],[Infinity,-Infinity]];
+const groups=new Map();
+let triangles=0,edges=0;
+for(const part of model.parts){
+  categories.add(part.category);
+  assert.ok(typeof part.explodeGroup==='string'&&part.explodeGroup.length>0,`Missing assembly group: ${part.name}`);
+  assert.ok(Array.isArray(part.explodeOffset)&&part.explodeOffset.length===3&&part.explodeOffset.every(Number.isFinite),`Missing displacement: ${part.name}`);
+  if(groups.has(part.explodeGroup))assert.deepEqual(part.explodeOffset,groups.get(part.explodeGroup),'Seams and panels in one group must stay together');
+  groups.set(part.explodeGroup,part.explodeOffset);
+  assert.ok(['garment','harness','hardware'].includes(part.category));
+  assert.equal(part.vertices.length,part.normals.length);
+  assert.equal(part.triangles.length%3,0);
+  assert.equal(part.edges.length%2,0);
+  for(const vector of [part.center,part.color,...part.vertices,...part.normals])assert.ok(vector.length===3&&vector.every(Number.isFinite));
+  for(const index of [...part.edges,...part.triangles])assert.ok(Number.isInteger(index)&&index>=0&&index<part.vertices.length);
+  for(const vertex of part.vertices)vertex.forEach((value,axis)=>{
+    bounds[axis][0]=Math.min(bounds[axis][0],value);bounds[axis][1]=Math.max(bounds[axis][1],value);
+    assert.ok(Math.abs(value+part.explodeOffset[axis])<[.43,.7,.4][axis],`Exploded part exceeds HUD envelope: ${part.name}`);
+  });
+  triangles+=part.triangles.length/3;edges+=part.edges.length/2;
+}
+assert.equal(categories.size,3,'Garment, harness and hardware remain distinct');
+assert.ok(groups.size>=10,'Wetsuit separates into actual sewn panels, not only a harness');
+const garment=model.parts.filter(part=>part.category==='garment'&&part.triangles.length>30);
+assert.ok(new Set(garment.map(part=>part.explodeGroup)).size>=8,'Multiple independent garment surfaces');
+assert.ok(garment.some(part=>part.explodeOffset[0]<0)&&garment.some(part=>part.explodeOffset[0]>0),'Sleeves and leg panels separate laterally');
+assert.ok(garment.some(part=>part.explodeOffset[2]<0)&&garment.some(part=>part.explodeOffset[2]>0),'Front and back cloth separate in depth');
+assert.ok(model.parts.filter(part=>part.category==='harness').some(part=>part.explodeOffset[2]<0),'Harness shell moves rearward');
+assert.ok(model.parts.filter(part=>part.category==='hardware').some(part=>/hook/i.test(part.name)&&part.explodeOffset[2]>0),'Hook moves forward');
+assert.ok(triangles<26000,'Panelled wearable geometry stays in the HUD budget');
+assert.ok(edges<8000,'Only useful seam, trim and hardware lines');
+assert.ok(bounds[1][1]-bounds[1][0]>1&&bounds[1][1]-bounds[1][0]<1.3,'Normalised height fits both existing layouts');
+assert.ok(bounds[0][1]-bounds[0][0]<.65,'Sleeves stay inside the layout');
+console.log(`Kitesurf gear: ${model.parts.length} parts, ${triangles} triangles, ${edges} seam/hardware segments; finite geometry and layout bounds verified.`);

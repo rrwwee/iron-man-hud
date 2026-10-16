@@ -1,0 +1,71 @@
+{
+  "design": "Rory Collins: face reconstructed from the owner-supplied video",
+  "source": "User video, local captured surface and fitted licensed FaceBuilder output",
+  "portrait": "Cleaned texture projected from the original video; no generated identity",
+  "version": "rory-nose-20261016-final",
+  "modelScale": 0.16,
+  "rotationX": 0.0327609,
+  "eyeCenter": [
+    0.00281129,
+    0.00713302,
+    0.01020848
+  ],
+  "rightEye": [
+    0.21135787,
+    0.01021966,
+    0.00438613
+  ],
+  "morphs": [
+    "blink_left_half",
+    "blink_left_closed",
+    "blink_right_half",
+    "blink_right_closed",
+    "gaze_left_left",
+    "gaze_left_right",
+    "gaze_left_up",
+    "gaze_left_down",
+    "gaze_right_left",
+    "gaze_right_right",
+    "gaze_right_up",
+    "gaze_right_down"
+  ],
+  "staticExpression": true,
+  "fade": {
+    "bottom": [
+      -0.115,
+      -0.085
+    ],
+    "top": [
+      0.044,
+      0.061
+    ],
+    "side": [
+      0.052,
+      0.071
+    ],
+    "depth": [
+      -0.044,
+      -0.015
+    ]
+  },
+  "meshes": [
+    {
+      "name": "face",
+      "vertices": 137198,
+      "triangles": 262680
+    },
+    {
+      "name": "eye_left",
+      "vertices": 6390,
+      "triangles": 11936
+    },
+    {
+      "name": "eye_right",
+      "vertices": 6447,
+      "triangles": 11936
+    }
+  ],
+  "note": "Fitted face with revised nose projection and underside, local eyelid closure and bounded gaze. Original video and authoring files remain private.",
+  "eyeRig": "eyelid-and-gaze-v1",
+  "noseRefinement": "Source-matched tip and underside; original-image nose reprojection; curved central columella; eye geometry and animation deltas preserved."
+}

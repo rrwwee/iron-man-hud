@@ -1,0 +1,3 @@
+# Keep third-party source verbatim; hide vendor noise in hosting UI.
+prototypes/3d-face/vendor/** linguist-vendored whitespace=-space-before-tab
+*.glb binary

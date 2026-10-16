@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {validateCodexActivity} from '../codex-activity.js';
+const fixture={schemaVersion:1,fetchedAt:'2026-10-14T12:00:00Z',lifetimeTokens:5144304755,currentStreakDays:13,days:[{date:'2026-10-14',tokens:12}],secret:'never publish',projectName:'private',longestRunningTurnSec:120};
+const result=validateCodexActivity(fixture);
+assert.deepEqual(Object.keys(result).sort(),['schemaVersion','fetchedAt','lifetimeTokens','currentStreakDays','days'].sort());
+assert.equal(result.lifetimeTokens,5144304755);
+assert.throws(()=>validateCodexActivity({...fixture,days:[{date:'2026-10-14',tokens:-1}]}));
+assert.throws(()=>validateCodexActivity({...fixture,days:[...fixture.days,...fixture.days]}));
+assert.equal(validateCodexActivity({...fixture,lifetimeTokens:null}).lifetimeTokens,null);
+console.log('Codex statistics: approved fields only, large totals, nulls and invalid buckets pass.');
