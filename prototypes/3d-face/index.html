@@ -1,0 +1,22 @@
+<!doctype html>
+<!-- Rory portrait with fitted eyelid and gaze motion. -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rory Collins · HUD</title><link rel="stylesheet" href="style.css?v=rory-29f"><script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script></head>
+<body>
+<header><span>MARK III / INTERNAL DISPLAY</span><button id="controlsToggle" aria-expanded="false" aria-controls="trialControls">Trial controls</button></header>
+<main id="stage" aria-label="Interactive personal HUD">
+  <canvas id="scene" aria-label="Interactive HUD"></canvas>
+  <div class="face-vignette"></div>
+  <canvas id="hologram" class="hud" aria-hidden="true"></canvas>
+  <div class="lens-shade"></div>
+  <div id="loading">Loading the authored head…</div>
+</main>
+<section id="trialControls" hidden aria-label="Face controls"><div class="panel-heading"><span>Face trial</span><span id="expressionHud">neutral</span></div><div class="expressions"><button data-expression="neutral" aria-pressed="true">Neutral</button><button data-expression="smirk" aria-pressed="false">Smirk</button><button data-expression="surprise" aria-pressed="false">Surprised</button><button data-expression="skeptical" aria-pressed="false">Skeptical</button></div><div class="actions"><button id="blink">Blink</button><button id="replay">Replay turn</button><button id="center">Center</button></div><div class="toggles"><label><input id="autoBlink" type="checkbox" checked> Auto blink</label><label><input id="photoEyes" type="checkbox" checked> Photographic eyes</label><label><input id="relaxedEyes" type="checkbox" checked> Relaxed gaze</label><label><input id="slowBlink" type="checkbox"> Slow blink preview</label><label><input id="hudToggle" type="checkbox" checked> HUD</label><label><input id="neutralLight" type="checkbox"> Inspection light</label></div>
+<div class="readouts"><output id="pose">Head: centered</output><output id="rig">Reading rig…</output></div>
+<p class="disclaimer">Rough MPFB likeness · move across the face to look around</p>
+<nav class="switcher" aria-label="Lighting variants"><button id="previous" aria-label="Previous lighting">←</button><span id="variantLabel">A / Cinematic</span><button id="next" aria-label="Next lighting">→</button></nav></section>
+<p class="interaction-hint">Move to look around <span>·</span> Press H for face controls</p>
+<aside id="hudComparison" hidden aria-label="HUD treatment comparison">
+  <div class="hud-choice-copy"><span>HUD visual trial</span><output id="hudCurrent" aria-live="polite">A / Visor projection</output><small id="hudDescription">Layered optics · cyan + amber</small></div>
+  <div class="hud-choice-buttons"><button id="hudPrevious" aria-label="Previous HUD treatment">←</button><button data-treatment="visor" aria-pressed="true">A <span>Visor</span></button><button data-treatment="targeting" aria-pressed="false">B <span>Targeting</span></button><button data-treatment="diagnostic" aria-pressed="false">C <span>Diagnostic</span></button><button id="hudNext" aria-label="Next HUD treatment">→</button><label class="follow-label">HUD follow <select id="hudFollow" aria-label="HUD follow strength"><option value="fixed">Fixed</option><option value="subtle" selected>Subtle</option><option value="close">Stronger</option></select></label><button id="hudMode">Visuals only</button></div>
+</aside>
+<script type="module">import('./head-viewer.js?v=long-coast-1');</script></body></html>

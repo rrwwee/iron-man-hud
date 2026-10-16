@@ -1,0 +1,10 @@
+{
+  "name": "personal-hud",
+  "private": true,
+  "scripts": {
+    "test": "node --loader ./prototypes/3d-face/scripts/hud-test-loader.mjs --test prototypes/3d-face/scripts/test_*.mjs",
+    "test:python": "python3 -m unittest discover -s prototypes/3d-face/scripts -p 'test_*.py'",
+    "serve": "python3 -m http.server 4188 --bind 127.0.0.1 --directory prototypes/3d-face"
+  },
+  "type": "module"
+}

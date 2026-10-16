@@ -1,0 +1,8 @@
+.private-assets/
+/prototypes/3d-face/local-preview/
+/tmp/
+/HUD reference.jpg
+/Curriculum Vitae.pdf
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {createMediaSequence} from '../hud-media-sequence.js';
+const s=createMediaSequence(4);
+assert.equal(s.index,0);assert.equal(s.step(-1,0),false);
+assert.equal(s.wheel(15,0),false);assert.equal(s.wheel(25,20),true);assert.equal(s.index,1);
+assert.equal(s.wheel(300,50),false);assert.equal(s.wheel(300,620),true);assert.equal(s.index,2);
+assert.equal(s.step(1,650),false,'Cannot interrupt a card handoff');
+assert.equal(s.sample(900).active,true);assert.equal(s.sample(1200).active,false);
+assert.equal(s.step(1,1200),true);assert.equal(s.index,3);
+assert.equal(s.step(1,1800),false,'Last item is the audio; scrolling never wraps');
+assert.equal(s.step(-1,1800),true);assert.equal(s.index,2);
+const reduced=createMediaSequence(4,{duration:0});assert.equal(reduced.step(1,0),true);assert.equal(reduced.sample(0).active,false);
+const momentum=createMediaSequence(4);assert.equal(momentum.wheel(40,0),true);
+for(let t=100;t<=1200;t+=100)assert.equal(momentum.wheel(60,t),false,'A continuous inertial gesture cannot skip another item');
+assert.equal(momentum.index,1);assert.equal(momentum.wheel(60,1500),true);
+const {videos}=await import('../site-content.js');
+assert.deepEqual(videos,[],'No uncleared media is published');
+console.log('Media sequence: ordered audio ending, clamped boundaries, gesture gating, smooth clock and reduced motion pass.');
