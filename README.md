@@ -38,6 +38,15 @@ GitHub Pages publishes the tracked runtime bundle at https://rrwwee.github.io/ir
 
 GitHub profile fields are fetched when visitors open the site, cached for one hour, with a saved fallback. Contribution graphs refresh daily through the GitHub activity workflow, followed by a Pages deployment. An already-open page must reload to receive the new snapshot.
 
-Codex totals and graphs use a public snapshot refreshed by a daily local Codex automation at 9 AM. `node tools/publish-codex-activity.mjs` reads the owner’s existing local Codex login, validates only approved aggregate fields, and updates the one JSON file on GitHub via the existing `gh` login. That commit triggers Pages deployment. Credentials, task text and project details never leave the local collector. The working tree is untouched. The Mac and local automation must be available; failed or incomplete collection preserves the published snapshot. An already-open page receives the new snapshot on reload.
+Codex totals and graphs use a public snapshot refreshed by a daily macOS LaunchAgent at 9 AM. `node tools/publish-codex-activity.mjs` reads the owner’s existing local Codex login, validates only approved aggregate fields, and updates the one JSON file on GitHub via the existing `gh` login. That commit triggers Pages deployment. Credentials, task text and project details never leave the local collector. The working tree is untouched. The Mac must be logged in and online; failed or incomplete collection preserves the published snapshot. An already-open page receives the new snapshot on reload.
 
 The owner approved public YouTube embeds on 16 October 2026. No video or film audio is downloaded or rehosted. The selected uploads play through YouTube; embed availability does not establish uploader authorisation. Joseph is omitted because the tested full-film uploads block embedding. See `docs/design/HUD-RELEASE-SCOPE.md` for the earlier review scope and publication update.
+
+Install or remove the direct macOS schedule (no model or Codex desktop automation):
+
+```sh
+node tools/install-codex-refresh.mjs
+node tools/install-codex-refresh.mjs --uninstall
+```
+
+It runs once when loaded and daily at 9 AM local time. macOS defers a scheduled run missed during sleep until the Mac wakes. Logs are in `~/Library/Logs/hud-codex-stats.log` and `.error.log`. The Codex CLI and GitHub CLI must remain signed in; the desktop app does not need to stay open.
