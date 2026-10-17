@@ -1,0 +1,53 @@
+name: Daily public Codex activity
+on:
+  schedule:
+    - cron: '37 8 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: public-codex-activity
+  cancel-in-progress: false
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check public projection
+        run: node prototypes/3d-face/scripts/test_codex_activity.mjs
+      - name: Check credential availability
+        id: auth
+        env:
+          CODEX_AUTH_JSON: ${{ secrets.CODEX_AUTH_JSON }}
+        run: |
+          if [ -z "$CODEX_AUTH_JSON" ]; then
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::Codex refresh is not connected. Previous public stats are retained.'
+          else
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install pinned collector runtime
+        if: steps.auth.outputs.ready == 'true'
+        run: npm install --global @openai/codex@0.157.0
+      - name: Collect and publish aggregate statistics
+        if: steps.auth.outputs.ready == 'true'
+        env:
+          CODEX_AUTH_JSON: ${{ secrets.CODEX_AUTH_JSON }}
+          CODEX_HOME: ${{ runner.temp }}/hud-codex-home
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node tools/write-codex-ci-auth.mjs
+          unset CODEX_AUTH_JSON
+          node tools/publish-codex-activity.mjs
+      - name: Remove runner credentials
+        if: always()
+        env:
+          CODEX_HOME: ${{ runner.temp }}/hud-codex-home
+        run: node -e 'require("node:fs").rmSync(process.env.CODEX_HOME,{recursive:true,force:true})'

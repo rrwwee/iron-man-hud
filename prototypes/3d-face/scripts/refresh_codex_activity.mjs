@@ -8,7 +8,9 @@ import {validateCodexActivity} from '../codex-activity.js';
 const output=process.argv[2]||fileURLToPath(new URL('../assets/codex-public.json',import.meta.url));
 async function collect(){
  return new Promise((resolve,reject)=>{
-  const child=spawn('codex',['app-server','--stdio'],{stdio:['pipe','pipe','ignore']});
+  const childEnvironment={...process.env};
+  for(const key of ['CODEX_AUTH_JSON','GH_TOKEN','GITHUB_TOKEN'])delete childEnvironment[key];
+  const child=spawn('codex',['app-server','--stdio'],{stdio:['pipe','pipe','ignore'],env:childEnvironment});
   const reader=createInterface({input:child.stdout});let settled=false;
   const finish=(error,result)=>{if(settled)return;settled=true;clearTimeout(timer);reader.close();child.stdin.end();child.kill();error?reject(error):resolve(result);};
   const timer=setTimeout(()=>finish(new Error('Codex statistics request timed out')),20000);

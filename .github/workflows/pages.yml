@@ -6,7 +6,7 @@ on:
   # GITHUB_TOKEN commits do not trigger push workflows. Deploy the completed
   # daily snapshot explicitly so the published graphs receive that update.
   workflow_run:
-    workflows: [Daily public GitHub activity]
+    workflows: [Daily public GitHub activity, Daily public Codex activity]
     branches: [main]
     types: [completed]
 permissions:

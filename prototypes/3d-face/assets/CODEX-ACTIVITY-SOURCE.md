@@ -14,6 +14,8 @@ The collector opens a temporary stdio app-server connection, requests only usage
 
 ## Automatic publication
 
-The owner authorised automatic public-stat updates on 16 October 2026. A direct macOS LaunchAgent runs `node tools/publish-codex-activity.mjs` at 9 AM and when loaded, using the existing Codex and `gh` logins on the Mac. The helper collects into a temporary file, validates the publication allowlist and updates only `prototypes/3d-face/assets/codex-public.json` on `main`. The resulting commit triggers GitHub Pages. It does not change the checkout or push unrelated work. Same-day unchanged data and older snapshots are skipped; incomplete data or failed collection leaves the existing public snapshot intact.
+The owner authorised automatic public-stat updates on 16 October 2026 and subsequently required that the site operate independently of their laptop. The local LaunchAgent and Codex chat automation have been removed.
 
-This requires the Mac to be logged in and online. The Codex desktop automation was removed at the owner’s request; no model turn is involved. No Codex credential is installed in GitHub Actions or delivered to the browser. The public site still reads a static JSON artifact, and open pages see updates on reload.
+The GitHub-hosted `Daily public Codex activity` workflow runs a pinned Codex CLI with temporary authentication material from the encrypted `CODEX_AUTH_JSON` secret, then invokes `tools/publish-codex-activity.mjs`. The helper publishes only this one validated statistics file and triggers Pages through the workflow completion event. The credential is never placed in a checkout or uploaded artifact and is deleted from the runner when the job ends.
+
+Connecting the secret requires the owner's explicit approval because a copied Codex sign-in allows broader account access than the public statistics projection. No secret is configured as part of preparing the workflow. Missing, expired or revoked credentials retain the prior public snapshot. This removes the laptop dependency; it does not make authentication permanent.
