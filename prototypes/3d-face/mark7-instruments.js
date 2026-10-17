@@ -1,5 +1,5 @@
-import {createSelectorControls3D} from './selector-controls-3d.js?v=rory-29f';
-import {selectorPrototype,selectorButtons,buttonRowPoint,selectorRegions,updateSelectorTrial} from './selector-prototype.js?v=selector-3';
+import {createSelectorControls3D} from './selector-controls-3d.js?v=single-hud-1';
+import {buttonRowPoint} from './hud-selector-layout.js?v=single-hud-1';
 // Traced diagnostic housings on two shallow sheets of the shared 3D visor.
 import {createCodexActivity} from './codex-activity.js?v=rory-29f';
 import * as THREE from 'three';
@@ -48,13 +48,13 @@ export function createMark7Instruments({scene,camera,stage,wake,onChoose,onBrows
         else{const m=mid(c,a);triangle(a,b,m,level+1);triangle(m,b,c,level+1);}return;}
       vertex(a);vertex(b);vertex(c);
     }
-    for(const region of [...modelRegions.map(referencePolygon),...selectorRegions]){const points=region.map(q=>new THREE.Vector2(q.x,q.y));
+    for(const region of modelRegions.map(referencePolygon)){const points=region.map(q=>new THREE.Vector2(q.x,q.y));
       for(const [a,b,c] of THREE.ShapeUtils.triangulateShape(points,[]))triangle(points[a],points[b],points[c]);}
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(p,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geometry.setIndex(indices);
     const mesh=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({map:texture,transparent:true,side:THREE.DoubleSide,forceSinglePass:true,depthTest:false,depthWrite:false,toneMapped:false}));
     mesh.renderOrder=100+sheets.length;group.add(mesh);const result={canvas,c:canvas.getContext('2d'),texture,mesh,depth};sheets.push(result);return result;
   }
-  const selector3D=selectorButtons?createSelectorControls3D(group):null;
+  const selector3D=createSelectorControls3D(group);
   const back=sheet(-.002),front=sheet(.0015),activity=createPublicActivity(()=>{dirty=true;wake();}),codexActivity=createCodexActivity(()=>{dirty=true;wake();});
   const lift=(x,y,z)=>{const [vx,vy]=canvasToVisor(x,y);return [vx,vy,diagnosticDepth(vx,vy)+.0015+z];};
   const ring=(radius,start,end,width,depth=.0012)=>({points:reliefArc(radius*S,start,end).map(([x,y])=>[cx+x,cy+y]),width:width*S,depth});
@@ -82,7 +82,7 @@ export function createMark7Instruments({scene,camera,stage,wake,onChoose,onBrows
   function path(c,points){c.beginPath();points.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();}
   function channelPath(c,ch){const a=ch.start,b=ch.end,inner=ch.inner*S,outer=ch.outer*S;c.beginPath();c.moveTo(...polar(inner,a));c.lineTo(...polar(outer,a));c.arc(cx,cy,outer,a,b);c.lineTo(...polar(inner,b));c.arc(cx,cy,inner,b,a,true);c.closePath();}
   function iconButton(c,x,y,icon,key,size=18,active=false){const hot=hover===key||focused===key||reading?.focus===key;c.beginPath();for(let i=0;i<6;i++){const a=Math.PI/6+i*TAU/6,px=x+Math.cos(a)*size,py=y+Math.sin(a)*size;i?c.lineTo(px,py):c.moveTo(px,py);}c.closePath();c.fillStyle=hot?'#414441d9':'#171b19c9';c.fill();c.strokeStyle=active?ink.white:hot?ink.white:ink.dim;c.lineWidth=active||hot?1.5:1;c.stroke();drawIcon(c,icon,x,y,size*1.2,active||hot?ink.white:ink.dim);if(active)line(c,[[x-size*.48,y+size*.92],[x+size*.48,y+size*.92]],ink.red,2.5);}
-  function navPoint(i){if(selectorButtons)return buttonRowPoint(['suit','globe','video','cv','about','links'].indexOf(state.entries[i].id));return polarPoint(101*S,-1.78+i*1.28/Math.max(1,(state?.entries.length||6)-1));}
+  function navPoint(i){return buttonRowPoint(['suit','globe','video','cv','about','links'].indexOf(state.entries[i].id));}
   function ticks(c,r,a,b,count,length=8){for(let i=0;i<=count;i++){const t=a+(b-a)*i/count;line(c,[polar(r,t),polar(r+(i%5?length*.5:length),t)],i%5?ink.dim:ink.white,i%5?.8:1.3);}}
   function drawBack(){
     const c=back.c;c.clearRect(0,0,W,H);
@@ -206,15 +206,6 @@ export function createMark7Instruments({scene,camera,stage,wake,onChoose,onBrows
   function paint(now){
     if(!state||now-stamp<80)return;stamp=now;dirty=false;
     const c=front.c;c.clearRect(0,0,W,H);const item=state.entries[state.selected];
-    state.entries.forEach((entry,i)=>{const p=navPoint(i),chosen=i===state.selected,a=-1.78+i*1.28/Math.max(1,state.entries.length-1);
-      if(selectorButtons){
-        // The controls are real recessed meshes, not circles on this canvas.
-      }else{
-        arc(c,cx,cy,96*S,a-.075,a+.075,chosen?ink.red:ink.dim,chosen?3:1);
-        iconButton(c,p.x,p.y,entry.icon||entry.id,'select:'+entry.id,12);
-        if(chosen)arc(c,p.x,p.y,15,0,TAU,ink.red,1.5);
-      }
-    });
     // The selector already names the Section. Keep the central hub unlabelled.
     // Four channels, in the four different instrument forms shown by the reference.
     plots.forEach(s=>plot(c,s,history[s.id]));
@@ -223,7 +214,7 @@ export function createMark7Instruments({scene,camera,stage,wake,onChoose,onBrows
     if((previewWeights.suit||0)>.001){c.save();c.globalAlpha=previewWeights.suit;drawActivity(c);c.restore();}else stage.removeAttribute('aria-description');
     if((previewWeights.cv||0)>.001){c.save();c.globalAlpha=previewWeights.cv;drawReading(c);c.restore();}
     selector3D?.update(state,hover,focused);
-    front.texture.needsUpdate=true;stage.dataset.hudTexturePaints=String(++painted);stage.dataset.cursorTelemetry=JSON.stringify(telemetry);stage.dataset.codexData=codexActivity.value.status;stage.dataset.contentFrame='reference-cut-mesh';stage.dataset.githubMeasure='daily contributions';if(selectorPrototype)stage.dataset.selectorTrial=selectorButtons?'buttons':'arc';
+    front.texture.needsUpdate=true;stage.dataset.hudTexturePaints=String(++painted);stage.dataset.cursorTelemetry=JSON.stringify(telemetry);stage.dataset.codexData=codexActivity.value.status;stage.dataset.contentFrame='reference-cut-mesh';stage.dataset.githubMeasure='daily contributions';
   }
   function project(px,py){const x=THREE.MathUtils.lerp(bounds[0],bounds[1],px/W),y=THREE.MathUtils.lerp(bounds[3],bounds[2],py/H)-1.619;
     point.set(x,y,diagnosticDepth(x,y)+.0015).applyMatrix4(group.matrixWorld).project(camera);const r=stage.getBoundingClientRect();return {x:r.x+(point.x+1)*r.width/2,y:r.y+(1-point.y)*r.height/2};}
@@ -279,7 +270,7 @@ export function createMark7Instruments({scene,camera,stage,wake,onChoose,onBrows
   return {
     get motionSamples(){return selector3D?.centres.map((p,i)=>({id:'button:'+selector3D.ids[i],visible:true,points:p.toArray()}))||[];},
     beginTransfer(value){selector3D?.beginTransfer(value);dirty=true;wake();},setExpandedAnchor(value){selector3D?.setExpandedAnchor(value);},
-    update(value){selector3D?.update(value,hover,focused);const previous=state?.entries[state.selected]?.id;if(previous!==value.entries[value.selected]?.id)transition=performance.now()+300;state=value;if(previous!==state.entries[state.selected]?.id)drawBack();updateSelectorTrial(value);dirty=true;wake();},
+    update(value){selector3D?.update(value,hover,focused);const previous=state?.entries[state.selected]?.id;if(previous!==value.entries[value.selected]?.id)transition=performance.now()+300;state=value;if(previous!==state.entries[state.selected]?.id)drawBack();dirty=true;wake();},
     setLocationState(){dirty=true;wake();},setExpanded(){dirty=true;wake();},setSuitState(){},setContentOpen(){},
     setPreviewWeights(value){const changed=Object.keys({...previewWeights,...value}).some(id=>Math.abs((previewWeights[id]||0)-(value[id]||0))>.00001);if(changed){previewWeights={...value};drawBack();dirty=true;}},
     setReadingState(value){if(reading?.focus!==value?.focus||reading?.chapter!==value?.chapter||Math.round((reading?.progress??-1)*100)!==Math.round((value?.progress??-1)*100)){reading=value;dirty=true;wake();}},

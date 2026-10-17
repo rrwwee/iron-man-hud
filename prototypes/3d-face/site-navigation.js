@@ -3,7 +3,7 @@ import {referenceToVisor,diagnosticDepth} from './hud-reference-model.js?v=selec
 import {loadPublicProfile} from './public-profile.js?v=rory-29f';
 import {createHUDVolumes} from './hud-volumes.js?v=local-media-1';
 import {createHUDContentSurface} from './hud-content-surface.js?v=profile-list-3';
-import {createVisorMenu} from './visor-menu-3d.js?v=rory-29f';
+import {createVisorMenu} from './visor-menu-3d.js?v=single-hud-1';
 import {createHUDAttitude} from './hud-attitude.js?v=tracking-sphere-1';
 import {createHUDSelection} from './hud-selection.js?v=rory-29f';
 import {transferPhase,transferDuration} from './hud-transfer.js?v=rory-29f';
@@ -116,7 +116,6 @@ export function createSiteNavigation({wake,invalidate,scene,camera}){
    else if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();slots.browse(e.key==='ArrowUp'?-1:1);showLeft();}
    else if(e.key==='ArrowRight'){e.preventDefault();expand();}
  });
- if(new URLSearchParams(location.search).has('selector')){const sample=new URLSearchParams(location.search).get('sample');if(sample)slots.select(sample);}
  showLeft();invalidate();
  return {
    get glowSources(){const [x,y]=referenceToVisor(374,239);return visible?[{id:'selector',position:new THREE.Vector3(x,y,diagnosticDepth(x,y)).applyMatrix4(spatial.frame),color:0xff7942,power:.008,strength:1},...volumes.glowSources,...[...surfaces.values()].map(view=>view.glowSource).filter(Boolean)]:[];},
