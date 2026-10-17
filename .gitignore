@@ -6,3 +6,6 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Generated GitHub Pages bundle
+_site/

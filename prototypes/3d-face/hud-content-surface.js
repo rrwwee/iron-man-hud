@@ -1,6 +1,6 @@
 import {scrollDocumentKey} from './document-navigation.js';
-import {loadVideoMetadata} from './video-metadata.js?v=rory-29f';
-import {sectionLayouts,sectionPreviewPoint} from './hud-section-layouts.js?v=rory-29f';
+import {loadVideoMetadata} from './video-metadata.js?v=local-media-1';
+import {sectionLayouts,sectionPreviewPoint} from './hud-section-layouts.js?v=profile-list-1';
 // Curved content framed inside the preview section or the larger right display.
 // The hidden native document supplies text layout, semantics, links and scrolling.
 import * as THREE from 'three';
@@ -10,7 +10,7 @@ import {projectControl,targetSize,viewportShift} from './hud-control-targets.js?
 import {visorDepth} from './visor-space.js?v=selector-3';
 import {layout} from './hud-layouts.js?v=selector-3';
 import {drawIcon} from './hud-icons.js?v=rory-29f';
-import {createHUDYouTube} from './hud-youtube.js?v=rory-29f';
+import {createHUDYouTube} from './hud-youtube.js?v=local-media-1';
 import {createHUDRelief} from './hud-relief.js?v=rory-29f';
 import {hudLayout,previewHousingPoint,documentAspect,diagnosticDepth,documentChapters} from './hud-reference-model.js?v=rory-29f';
 
@@ -109,7 +109,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,getRig
     else{
       article=document.createElement('article');article.className=next.id==='cv'?'hud-document hud-cv':'hud-document';article.style.height=`${h}px`;article.tabIndex=0;
       // Authored local HTML fixture only; this is not an arbitrary HTML renderer.
-      if(next.html)article.innerHTML=next.html;
+      if(next.html)article.innerHTML=placement==='preview'?(next.previewHtml??next.html):next.html;
       else{const heading=document.createElement('h1');heading.textContent=next.title;article.append(heading);next.paragraphs.forEach(text=>{const p=document.createElement('p');p.textContent=text;article.append(p);});}
       body.append(article);
       article.addEventListener('keydown',event=>scrollDocumentKey(event,article,scrollTo));
@@ -128,8 +128,16 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,getRig
   }
   function updateLinks(value){
     if(item?.kind!=='Links')return;
+    const focused=body.contains(document.activeElement)?document.activeElement.href:null;
     item={...item,links:value};body.replaceChildren();
-    for(const link of value){const a=document.createElement('a');a.href=link.href;a.textContent=[link.name,link.label,link.bio,link.detail].filter(Boolean).join('. ');a.target='_blank';a.rel='noopener noreferrer';body.append(a);}
+    for(const link of value){
+      const a=document.createElement('a');a.href=link.href;a.className='hud-profile-link';
+      a.textContent=[link.name,link.label,link.bio,link.detail].filter(Boolean).join('. ');
+      a.target='_blank';a.rel='noopener noreferrer';a.style.pointerEvents='none';
+      a.addEventListener('pointerenter',()=>{hot=a;changed();});
+      a.addEventListener('pointerleave',()=>{if(hot===a)hot=null;changed();});
+      body.append(a);if(a.href===focused)a.focus({preventScroll:true});
+    }
     changed();
   }
   function wrappedText(text,x,y,width,size=34,color=ink.white,lineHeight=size*1.3){
@@ -140,62 +148,59 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,getRig
     }
     if(lineText)c.fillText(lineText,x,y);return y+lineHeight;
   }
-  function drawProfilePreview(){
-    const focused=Array.from(body.children).indexOf(document.activeElement);
-    const selected=item.links.findIndex(link=>link.href===hot);
-    const index=focused>=0?focused:selected>=0?selected:Math.max(0,item.links.findIndex(link=>link.icon==='github'));
-    const profile=item.links[index],nodes=sectionLayouts.links.nodes;
-    drawIcon(c,profile.icon,270,158,48,ink.white);
-    c.font='38px Arial';c.fillStyle=ink.white;c.textAlign='left';c.fillText(profile.name,310,158);
-    c.font='27px Arial';c.fillStyle=ink.dim;c.fillText(profile.label,310,197);
-    wrappedText(profile.bio||'',90,320,350,38,ink.white,46);
-    if(profile.metrics){profile.metrics.forEach((metric,i)=>{const x=110+i*180;drawIcon(c,metric.icon,x,490,30,ink.dim);c.fillStyle=ink.gold;c.font='38px Arial';c.fillText(String(metric.value),x+28,503);c.fillStyle=ink.dim;c.font='22px Arial';c.fillText(metric.label,x-10,542);});}
-    else if(profile.detail)wrappedText(profile.detail,90,490,340,30,ink.gold,38);
-    line(95,555,195,555,ink.dim);line(195,555,nodes[index][0]-44,nodes[index][1],ink.faint);
-    links=item.links.map((link,i)=>{
-      const [x,y]=nodes[i],active=i===index;
-      c.strokeStyle=active?ink.gold:ink.dim;c.lineWidth=active?2:1;c.beginPath();c.arc(x,y,34,0,Math.PI*2);c.stroke();
-      drawIcon(c,link.icon,x,y,36,active?ink.white:ink.dim);
-      if(active)line(x-14,y+47,x+14,y+47,ink.gold,3);
-      return {x:x-56,y:y-52,w:112,h:104,node:link.href};
-    });
-    root.dataset.previewProfile=profile.icon;
-  }
   function drawAboutPreview(){
-    c.fillStyle=ink.white;c.font='40px Arial';c.textAlign='left';c.fillText('About this HUD',245,145);
-    wrappedText(article.querySelector('p').textContent,80,300,460,36,ink.white,44);
-    const sourceLinks=Array.from(article.querySelectorAll('a'));
-    const icons=['github','about','suit','audio'],names=['Source','Face','Armor','Audio'],nodes=sectionLayouts.about.nodes;
-    for(let i=1;i<nodes.length;i++)line(...nodes[i-1],...nodes[i],ink.faint);
-    links=sourceLinks.map((node,i)=>{
-      const [x,y]=nodes[i],active=hot===node||document.activeElement===node;
-      c.strokeStyle=active?ink.gold:ink.dim;c.beginPath();c.arc(x,y,29,0,Math.PI*2);c.stroke();
-      drawIcon(c,icons[i],x,y,32,active?ink.gold:ink.white);
-      c.font='23px Arial';c.fillStyle=ink.dim;c.textAlign='center';c.fillText(names[i],x,y+52);
-      return {x:x-56,y:y-45,w:112,h:104,node};
-    });c.textAlign='left';
+    const node=article.querySelector('a');
+    c.font='36px Arial';c.textAlign='left';c.textBaseline='alphabetic';
+    c.fillStyle=ink.white;c.fillText('made with codex,',100,350);
+    const x=100,y=402,width=c.measureText(node.textContent).width;
+    c.fillStyle=hot===node||document.activeElement===node?ink.gold:ink.white;
+    c.fillText(node.textContent,x,y);line(x,y+8,x+width,y+8,c.fillStyle,1.5);
+    links=[{x:x-8,y:y-38,w:width+16,h:56,node}];
   }
+
   function drawProfiles(){
-    if(dock==='preview'){drawProfilePreview();return;}
-    const row=(h-48)/4;
+    const compact=dock==='preview',x=compact?70:24,width=compact?530:592;
+    const top=compact?216:28,row=compact?137:(h-48)/item.links.length;
     c.textAlign='left';c.textBaseline='alphabetic';
-    links=item.links.map((link,i)=>{
-      const y=24+i*row,active=hot===link.href||document.activeElement===body.children[i];
-      c.fillStyle=active?'rgba(242,163,83,.10)':'rgba(2,10,14,.58)';c.fillRect(20,y,600,row-10);
-      line(22,y+row-10,616,y+row-10,active?ink.gold:ink.faint);
-      line(22,y+16,22,y+row-26,active?ink.gold:ink.dim,2);
-      drawIcon(c,link.icon,65,y+(row-10)/2,40,active?ink.gold:ink.white);
-      c.fillStyle=ink.dim;c.font='17px Arial';c.fillText(link.name+(link.status==='live'?' · live':link.status?' · saved':''),108,y+24);
-      c.fillStyle=ink.white;c.font='28px Arial';c.fillText(link.label,108,y+56);
-      c.fillStyle=ink.dim;c.font='19px Arial';
-      let text=link.bio||'';while(text.length&&c.measureText(text).width>465)text=text.slice(0,-2)+'…';
-      c.fillText(text,108,y+84);
-      if(link.detail){c.fillStyle=ink.gold;c.font='18px Arial';c.fillText(link.detail,108,y+112);}
-      // A single outward stroke identifies the whole row as an external link.
-      line(586,y+26,600,y+12,active?ink.gold:ink.dim);line(589,y+12,600,y+12);line(600,y+12,600,y+23);
-      return {x:20,y,w:600,h:row-10,node:link.href};
+    const fitText=(text,left,y,limit,size,color)=>{
+      c.font=`${size}px Arial`;c.fillStyle=color;
+      let clipped=text||'';
+      if(c.measureText(clipped).width>limit){
+        while(clipped.length&&c.measureText(clipped+'…').width>limit)clipped=clipped.slice(0,-1);
+        clipped+='…';
+      }
+      c.fillText(clipped,left,y);
+    };
+    links=item.links.map((profile,i)=>{
+      const node=body.children[i],y=top+i*row,bottom=y+row-12;
+      const active=hot===node||document.activeElement===node;
+      const textX=x+76,textWidth=width-102,accent=active?ink.gold:ink.dim;
+      // Open instrument rails: a whole row is one target, with no hover-only content.
+      c.fillStyle=active?'rgba(242,163,83,.09)':compact?'rgba(0,0,0,0)':'rgba(0,0,0,.20)';
+      c.fillRect(x,y,width,row-12);
+      line(x+76,bottom,x+width-18,bottom,ink.faint);
+      line(x,y+12,x,y+39,accent,2);line(x,y+12,x+12,y+12,accent);
+      line(x+width-12,bottom,x+width,bottom,accent);line(x+width,bottom-12,x+width,bottom,accent);
+      const cx=x+34,cy=y+43;
+      c.strokeStyle=accent;c.lineWidth=1;c.beginPath();c.arc(cx,cy,25,-.8,Math.PI*1.15);c.stroke();
+      drawIcon(c,profile.icon,cx,cy,compact?35:29,active?ink.gold:ink.white);
+      line(cx-29,cy,cx-25,cy,ink.dim);line(cx,cy-29,cx,cy-25,ink.dim);
+      fitText(profile.name,textX,y+(compact?39:31),textWidth-28,compact?42:30,ink.white);
+      fitText(profile.label,textX,y+(compact?74:57),textWidth,compact?28:23,ink.dim);
+      if(!compact)fitText(profile.bio,textX,y+82,textWidth,20,ink.white);
+      if(profile.metrics?.length){
+        profile.metrics.forEach((metric,j)=>{
+          const mx=textX+j*textWidth/profile.metrics.length;
+          drawIcon(c,metric.icon,mx+8,y+104,17,ink.dim);
+          fitText(String(metric.value)+' '+metric.label,mx+24,y+110,textWidth/profile.metrics.length-30,compact?22:18,ink.gold);
+        });
+      }else if(profile.detail){fitText(profile.detail,textX,y+110,textWidth,compact?23:19,ink.gold);}
+      else if(compact){fitText(profile.bio,textX,y+110,textWidth,22,ink.dim);}
+      // The exit arrow signals that clicking any part of the row opens the profile.
+      const ax=x+width-10,ay=y+22;
+      line(ax-11,ay+11,ax,ay,accent);line(ax-8,ay,ax,ay,accent);line(ax,ay,ax,ay+8,accent);
+      return {x,y,w:width,h:row-12,node};
     });
-    c.textAlign='left';
   }
   function glyph(value,x,y,size=20){c.fillStyle=ink.white;c.font=`${size}px Arial`;c.textAlign='center';c.textBaseline='middle';c.fillText(value,x,y);c.textAlign='left';c.textBaseline='alphabetic';}
   function line(x1,y1,x2,y2,color=ink.dim,width=1){c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();}
@@ -411,6 +416,17 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,getRig
 
     }
     root.dataset.chapterTargets=JSON.stringify(item.id==='cv'&&dock==='preview'?[]:sections.map((s,i)=>({...project(675/vw,chapterSlot(i)/h),label:s.label})));
+    if(item.kind==='Links')for(const link of links){
+      // Native anchors cover the rendered quadrilateral, so the full row works
+      // with mouse, touch and keyboard without relying on a canvas hover target.
+      const corners=[[link.x,link.y],[link.x+link.w,link.y],[link.x+link.w,link.y+link.h],[link.x,link.y+link.h]].map(([x,y])=>project(x/vw,y/h));
+      const left=Math.min(...corners.map(p=>p.x)),top=Math.min(...corners.map(p=>p.y));
+      const width=Math.max(1,Math.max(...corners.map(p=>p.x))-left),height=Math.max(1,Math.max(...corners.map(p=>p.y))-top);
+      const interactive=!closing&&!docking&&presence>.98&&amount>.98;
+      Object.assign(link.node.style,{left:left+'px',top:top+'px',width:width+'px',height:height+'px',
+        clipPath:'polygon('+corners.map(p=>`${(p.x-left)/width*100}% ${(p.y-top)/height*100}%`).join(',')+')',pointerEvents:interactive?'auto':'none'});
+      link.node.tabIndex=interactive?0:-1;
+    }
     root.dataset.linkTargets=JSON.stringify(links.filter(link=>link.y>=0&&link.y+link.h<=h).map(link=>({...project((link.x+link.w/2)/vw,(link.y+link.h/2)/h),href:typeof link.node==='string'?link.node:link.node.href})));
     root.dataset.targets=JSON.stringify({play:project(28/vw,(h-23)/h),center:project(320/vw,.5),scroll:project(400/vw,.5),scrollbar:project(635/vw,.5),seek:project(315/vw,(h-23)/h),mute:project(610/vw,(h-23)/h)});
     const nativeTargets=dock==='preview'?[...controlTargets]:[...sections.map((section,i)=>({...project(675/vw,chapterSlot(i)/h),key:section.key}))];
@@ -428,6 +444,7 @@ export function createHUDContentSurface({scene,stage,camera,wake,getFrame,getRig
     readingSlider.hidden=item.id!=='cv'||next!=='preview';
     pdfButton.hidden=item.id!=='cv';
     if(article){
+      if(item.previewHtml)article.innerHTML=next==='preview'?item.previewHtml:item.html;
       h=next==='preview'?previewHeight:expandedHeight();article.style.height=`${h}px`;
       updateUV();
       article.scrollTop=progress*Math.max(0,article.scrollHeight-article.clientHeight);layoutDocument();

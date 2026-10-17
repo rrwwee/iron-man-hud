@@ -16,7 +16,7 @@ Open http://127.0.0.1:4188/. The static entry point is `prototypes/3d-face/index
 
 ## Data and assets
 
-The repository includes the approved runtime portrait, original equipment geometry, CV, completed-route coordinates and public activity snapshots. Their sources and limitations are documented beside the assets. Media is currently empty; WOO integration is pending access to the owner’s session data. A GitHub snapshot can refresh through the existing daily workflow; other snapshots are not live feeds.
+The repository includes the approved runtime portrait, original equipment geometry, CV, completed-route coordinates and public activity snapshots. Their sources and limitations are documented beside the assets. Media embeds the original 2008 Iron Man scene and The Shape of Speed in the requested order; WOO integration is pending access to the owner’s session data. A GitHub snapshot can refresh through the existing daily workflow; other snapshots are not live feeds.
 
 Raw footage, private fitting inputs, product reference photography, discarded character studies and temporary renders are excluded. The current source does not make those old studies selectable. Earlier prototype branches are separate history and are not rewritten by this change.
 
@@ -32,6 +32,12 @@ blender --background --python tools/kitesurf/build_gear.py -- --output /tmp/hud-
 
 Copy its reviewed `gear.json` to `prototypes/3d-face/assets/kitesurf-gear.json` when updating. The default output goes to the ignored `.private-assets/kitesurf-build/`. This is a visual model from references, not manufacturer CAD.
 
-## Release boundary
+## Hosting and refreshes
 
-This PR prepares source for review; it does not publish the site. The checks workflow only tests. No GitHub Pages deployment workflow is included. See `docs/design/HUD-RELEASE-SCOPE.md` for the accepted scope and remaining work.
+GitHub Pages publishes the tracked runtime bundle at https://rrwwee.github.io/iron-man-hud/. Pushes to `main`, manual runs and completed daily GitHub snapshot runs trigger `.github/workflows/pages.yml`. Tests must pass before deployment. `node tools/build-pages.mjs` packages `_site/`; it excludes untracked files, local-preview media and authoring tools.
+
+GitHub profile fields are fetched when visitors open the site, cached for one hour, with a saved fallback. Contribution graphs refresh daily through the GitHub activity workflow, followed by a Pages deployment. An already-open page must reload to receive the new snapshot.
+
+Codex totals and graphs use a saved snapshot. An owner with a signed-in local Codex installation can run `node prototypes/3d-face/scripts/refresh_codex_activity.mjs`, then review and commit only `assets/codex-public.json`. There is no automatic hosted Codex collection or published credential.
+
+The owner approved public YouTube embeds on 16 October 2026. No video or film audio is downloaded or rehosted. The selected uploads play through YouTube; embed availability does not establish uploader authorisation. Joseph is omitted because the tested full-film uploads block embedding. See `docs/design/HUD-RELEASE-SCOPE.md` for the earlier review scope and publication update.

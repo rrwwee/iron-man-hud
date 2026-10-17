@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import {referenceToVisor,diagnosticDepth} from './hud-reference-model.js?v=selector-3';
 import {loadPublicProfile} from './public-profile.js?v=rory-29f';
-import {createHUDVolumes} from './hud-volumes.js?v=long-coast-1';
-import {createHUDContentSurface} from './hud-content-surface.js?v=hud-glow-3';
+import {createHUDVolumes} from './hud-volumes.js?v=local-media-1';
+import {createHUDContentSurface} from './hud-content-surface.js?v=profile-list-3';
 import {createVisorMenu} from './visor-menu-3d.js?v=rory-29f';
 import {createHUDAttitude} from './hud-attitude.js?v=tracking-sphere-1';
 import {createHUDSelection} from './hud-selection.js?v=rory-29f';
 import {transferPhase,transferDuration} from './hud-transfer.js?v=rory-29f';
-import {entries as content} from './site-content.js?v=rory-29f';
+import {entries as content} from './site-content.js?v=public-release-1';
 import {createMotionAudit} from './hud-motion-audit.js?v=rory-29f';
 import {createPreviewTransition} from './hud-preview-transition.js?v=rory-29f';
 import {projectControl} from './hud-control-targets.js?v=rory-29f';
