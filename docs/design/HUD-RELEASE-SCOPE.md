@@ -16,3 +16,9 @@
 Run `npm test` and `npm run test:python`. Check a clean checkout over HTTP for asset failures, shader errors, both model layouts, transfer, blinking, cursor tracking and coasting. Review against `origin/main` for standards and this scope before pushing.
 
 No site deployment, Pages enablement, merge, history rewriting, new external messaging, WOO login or automated data collection is authorized by this PR. The static portrait is intentionally tracked; its private fitting inputs are not. Existing older branches are untouched.
+
+## Publication update — 16 October 2026
+
+The owner subsequently authorised publishing the current site to GitHub Pages, including public YouTube embeds for `aNNdVZ-mVy4` (original 2008 Iron Man press conference) followed by `2gA-3T-95YQ` (The Shape of Speed). Embed availability was tested; uploader authorisation remains unverified. Joseph remains omitted because tested full-film uploads block embedding. No film media is rehosted. This replaces the earlier no-deployment and empty-Media constraints above.
+
+Deployment packages tracked runtime files only. The existing daily GitHub snapshot workflow triggers a Pages redeployment; Codex usage remains an owner-refreshed snapshot.

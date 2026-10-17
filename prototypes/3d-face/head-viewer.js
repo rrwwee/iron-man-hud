@@ -5,7 +5,7 @@ import {GLTFLoader} from './vendor/loaders/GLTFLoader.js';
 import {createFaceEyeRig} from './face-eye-rig.js?v=red-hud-3';
 import {makeBlinkPlan, blinkWeight, gazeTarget, dampGaze} from './face-motion.js';
 import {frameCamera} from './visor-space.js?v=selector-3';
-import { createHUDTrial } from './hud-trial.js?v=long-coast-1';
+import { createHUDTrial } from './hud-trial.js?v=local-media-1';
 
 const $=id=>document.getElementById(id),stage=$('stage');
 const renderer=new THREE.WebGLRenderer({canvas:$('scene'),antialias:true,alpha:true,powerPreference:'low-power'});

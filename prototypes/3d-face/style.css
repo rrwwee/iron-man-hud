@@ -157,3 +157,6 @@ body[data-debug=true] #trialControls:not([hidden]){display:block!important}
 .hud-media-external:hover{background:linear-gradient(transparent 65%,rgba(0,0,0,.8));color:#f2a353}
 
 .hud-media-native{position:absolute;inset:0 0 auto;width:640px;height:360px;object-fit:contain;background:#000}
+
+/* Profile entries retain native links over their curved canvas rows. */
+.hud-profile-link{position:fixed;z-index:13;display:block;overflow:hidden;color:transparent;font-size:0;line-height:0;text-decoration:none;touch-action:manipulation}

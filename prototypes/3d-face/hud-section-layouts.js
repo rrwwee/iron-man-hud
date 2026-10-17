@@ -2,7 +2,7 @@ import {fromReference,previewHousingPoint} from './hud-reference-model.js?v=rory
 // Open layouts share a coordinate space, not a shared visible box. The islands
 // occupy the upper tip, broad centre and lower arc of the diagnostic wing.
 export const sectionLayouts={
-  links:{height:820,nodes:[[520,245],[550,390],[530,540],[435,695]]},
+  links:{height:820},
   about:{height:820,nodes:[[90,560],[225,655],[380,715],[535,640]]},
   video:{height:820,player:{left:52,top:250,width:520,height:328.25},audioY:685},
 };

@@ -1,0 +1,49 @@
+name: Publish HUD
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # GITHUB_TOKEN commits do not trigger push workflows. Deploy the completed
+  # daily snapshot explicitly so the published graphs receive that update.
+  workflow_run:
+    workflows: [Daily public GitHub activity]
+    branches: [main]
+    types: [completed]
+permissions:
+  contents: read
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: npm test
+      - run: npm run test:python
+      - run: node tools/build-pages.mjs
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

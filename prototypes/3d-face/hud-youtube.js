@@ -36,7 +36,7 @@ export function createHUDYouTube({root,changed}){
     }else{
       const poster=document.createElement('img');poster.className='hud-media-still';poster.alt='';poster.src=`https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`;element.append(poster);
       if(!item.external){
-      const iframe=document.createElement('iframe');iframe.style.opacity='0';iframe.width=640;iframe.height=360;iframe.title=item.title;iframe.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';iframe.referrerPolicy='strict-origin-when-cross-origin';iframe.allowFullscreen=true;
+      const iframe=document.createElement('iframe');iframe.style.opacity='1';iframe.width=640;iframe.height=360;iframe.title=item.title;iframe.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';iframe.referrerPolicy='strict-origin-when-cross-origin';iframe.allowFullscreen=true;
       const q=new URLSearchParams({enablejsapi:'1',autoplay:'1',playsinline:'1',rel:'0',mute:'0',controls:'1',origin:location.origin});
       iframe.src=`https://www.youtube.com/embed/${item.id}?${q}`;card.iframe=iframe;element.append(iframe);
       iframe.onload=()=>{iframe.contentWindow?.postMessage(JSON.stringify({event:'listening',id:`hud-media-${++serial}`}),'https://www.youtube.com');if(card!==active||!visible)pause(card);};
@@ -47,7 +47,7 @@ export function createHUDYouTube({root,changed}){
       interaction.classList.add('hud-media-external');interaction.href=`https://www.youtube.com/watch?v=${item.id}`;interaction.target='_blank';interaction.rel='noopener noreferrer';
       interaction.setAttribute('aria-label',`Watch full film: ${item.title} on YouTube (opens in a new tab)`);interaction.textContent='↗';
     }else{interaction.setAttribute('aria-label',`Play or pause ${item.title}`);interaction.onclick=()=>toggle(card);}
-    if(item.src&&item.kind!=='Audio')interaction.hidden=true;
+    if(card.iframe||(item.src&&item.kind!=='Audio'))interaction.hidden=true;
     element.append(interaction);card.interaction=interaction;
     const marker=document.createElement('div');marker.className='hud-media-position';marker.setAttribute('aria-hidden','true');list.forEach((_,i)=>{const bar=document.createElement('i');bar.className=i===sequence.index?'current':'';marker.append(bar);});element.append(marker);
     element.setAttribute('aria-label',`${sequence.index+1} of ${list.length}: ${item.title}`);

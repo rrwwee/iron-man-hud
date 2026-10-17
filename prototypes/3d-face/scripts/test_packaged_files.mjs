@@ -1,8 +1,11 @@
+import {execFileSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 const root=new URL('../',import.meta.url);
-async function walk(dir){const out=[];for(const entry of await fs.readdir(dir,{withFileTypes:true})){if(entry.name==='__pycache__')continue;const url=new URL(entry.name+(entry.isDirectory()?'/':''),dir);out.push(...(entry.isDirectory()?await walk(url):[url]));}return out;}
+async function walk(dir){const out=[];for(const entry of await fs.readdir(dir,{withFileTypes:true})){if(['__pycache__','local-preview'].includes(entry.name))continue;const url=new URL(entry.name+(entry.isDirectory()?'/':''),dir);out.push(...(entry.isDirectory()?await walk(url):[url]));}return out;}
+const tracked=execFileSync('git',['ls-files','--','prototypes/3d-face/local-preview'],{encoding:'utf8'}).trim();
+assert.equal(tracked,'','Local review media must never be tracked');
 const files=await walk(root);
 for(const file of files){
  assert.ok(!/\/(?:local-preview|source-assets)\//.test(file.pathname),'Private authoring directories are not served');

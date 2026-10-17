@@ -1,5 +1,8 @@
 // User-supplied CV, profile links and ordered media choices.
-export const videos = [];
+export const videos = [
+  {id:'aNNdVZ-mVy4',title:'I Am Iron Man — 2008 press conference',kind:'Video'},
+  {id:'2gA-3T-95YQ',title:'The Shape of Speed — North Sails trim',kind:'Video'},
+];
 export const entries = [
   {id:'cv',label:'Curriculum vitae',kind:'Text',title:'Rory Collins',html:`
     <h1>Rory Collins</h1>
@@ -17,8 +20,14 @@ export const entries = [
     <h2>ACHIEVEMENTS &amp; AWARDS</h2><ul><li>1st place at national intervarsity Capture-the-Flag cybersecurity competition</li><li>1st university team at open sailing competition (Glasgow Grouse)</li><li>Best Male Lead Vocal national nomination for my school musical</li></ul>
     <h2>INTERESTS</h2><ul><li>Competed internationally in swimming and sailing; swimming, sailing, kitesurfing, piano</li></ul>
     <p class="cv-download"><a href="./assets/rory-collins-cv.pdf" target="_blank" rel="noopener">Download original CV</a></p>`},
-  {id:'video',label:'Media',kind:'Text',title:'Media',html:'<p>No media is currently available.</p>'},
+  videos.length?{id:'video',label:'Media',kind:'Video',title:'Media',videos}:{id:'video',label:'Media',kind:'Text',title:'Media',html:'<p>No media is currently available.</p>'},
   {id:'x',label:'X · @rrwwe_e',kind:'External',href:'https://x.com/rrwwe_e'},
   {id:'linkedin',label:'LinkedIn',kind:'External',href:'https://www.linkedin.com/in/roryfcollins/'},
-  {id:'about',label:'About this HUD',kind:'Text',title:'About',html:`<h1>About this HUD</h1><p>A collection of projects and journeys. The globe traces flights I have already taken.</p><p><a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">Source code</a></p><h2>Credits</h2><p>Globe outlines: <a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener noreferrer">Natural Earth</a>, public domain. Rory’s portrait is reconstructed from his own reference video using a local capture and a fitted FaceBuilder model. Portrait fitting, kitesurf equipment geometry, HUD instrumentation and layouts authored for this site. The equipment depicts an O’Neill Epic wetsuit and Mystic Warrior harness from personal references.</p>`},
+  {id:'about',label:'About this HUD',kind:'Text',title:'About',
+    previewHtml:`<p>made with codex, <a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">source here</a></p>`,
+    html:`<h1>Credits</h1>
+      <p>Made with Codex by Rory Collins. <a href="https://github.com/rrwwee/iron-man-hud" target="_blank" rel="noopener noreferrer">Source here</a>.</p>
+      <h2>Rendering</h2><p>Built with <a href="https://threejs.org/" target="_blank" rel="noopener noreferrer">Three.js</a>. HUD instrumentation, layouts and kitesurf equipment geometry authored for this site.</p>
+      <h2>Portrait &amp; equipment</h2><p>Rory’s portrait uses his own reference video, a local capture and a fitted FaceBuilder model. The equipment depicts his O’Neill Epic wetsuit and Mystic Warrior harness, modelled from personal references.</p>
+      <h2>Globe</h2><p>Map outlines from <a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener noreferrer">Natural Earth</a>, public domain.</p>`},
 ];

@@ -7,5 +7,6 @@ export function validateVideoMetadata(value){
 }
 let pending;
 export function loadVideoMetadata(){
-  return pending??=fetch('./assets/youtube-public.json').then(r=>r.ok?r.json():null).then(validateVideoMetadata).catch(()=>[]);
+  // No approved Data API snapshot is configured; do not scrape or invent counts.
+  return pending??=Promise.resolve([]);
 }
