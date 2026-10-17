@@ -5,7 +5,7 @@ import {createInterface} from 'node:readline';
 import {writeFile,rename} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {validateCodexActivity} from '../codex-activity.js';
-const output=fileURLToPath(new URL('../assets/codex-public.json',import.meta.url));
+const output=process.argv[2]||fileURLToPath(new URL('../assets/codex-public.json',import.meta.url));
 async function collect(){
  return new Promise((resolve,reject)=>{
   const child=spawn('codex',['app-server','--stdio'],{stdio:['pipe','pipe','ignore']});

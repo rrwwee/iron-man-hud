@@ -11,3 +11,9 @@ node prototypes/3d-face/scripts/refresh_codex_activity.mjs
 ```
 
 The collector opens a temporary stdio app-server connection, requests only usage data and closes it. It never starts a model turn. Failed collection leaves the previous artifact intact; the displayed snapshot becomes stale after its UTC collection date. This is a snapshot, not a live usage meter.
+
+## Automatic publication
+
+The owner authorised automatic public-stat updates on 16 October 2026. A daily local Codex automation runs `node tools/publish-codex-activity.mjs` at 9 AM, using the existing Codex and `gh` logins on the Mac. The helper collects into a temporary file, validates the publication allowlist and updates only `prototypes/3d-face/assets/codex-public.json` on `main`. The resulting commit triggers GitHub Pages. It does not change the checkout or push unrelated work. Same-day unchanged data and older snapshots are skipped; incomplete data or failed collection leaves the existing public snapshot intact.
+
+This requires the local automation host to be available. No Codex credential is installed in GitHub Actions or delivered to the browser. The public site still reads a static JSON artifact, and open pages see updates on reload.
