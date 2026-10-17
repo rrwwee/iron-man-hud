@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import {instrumentInk as ink} from './hud-instrument-style.js?v=rory-29f';
 import {drawIcon} from './hud-icons.js?v=selector-3';
 import {canvasToVisor,diagnosticDepth} from './hud-reference-model.js?v=selector-3';
-import {buttonRowPoint} from './selector-prototype.js?v=selector-3';
+import {buttonRowPoint} from './hud-selector-layout.js?v=single-hud-1';
 import {transferPhase,flightPoint,rowSlot} from './hud-transfer.js?v=rory-29f';
 const ids=['suit','globe','video','cv','about','links'];
 export function createSelectorControls3D(parent){

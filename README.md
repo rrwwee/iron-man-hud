@@ -12,7 +12,7 @@ npm run test:python
 npm run serve
 ```
 
-Open http://127.0.0.1:4188/. The static entry point is `prototypes/3d-face/index.html`; it must be served over HTTP, not opened as a file. The vendored Three.js license is in `prototypes/3d-face/vendor/THREE-LICENSE.txt`.
+Open http://127.0.0.1:4188/. There is one HUD configuration; old variant, selector and inspection query parameters are discarded. The static entry point is `prototypes/3d-face/index.html`; it must be served over HTTP, not opened as a file. The vendored Three.js license is in `prototypes/3d-face/vendor/THREE-LICENSE.txt`.
 
 ## Data and assets
 
