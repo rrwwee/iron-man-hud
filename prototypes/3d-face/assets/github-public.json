@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "source": "https://github-contributions-api.jogruber.de/v4/rrwwee?y=last",
   "profile": "https://github.com/rrwwee",
-  "refreshAttemptedAt": "2026-10-17T04:46:07.480Z",
-  "refreshStatus": "ok",
+  "refreshAttemptedAt": "2026-10-18T12:39:13.479Z",
+  "refreshStatus": "failed",
   "lastSuccessful": {
     "fetchedAt": "2026-10-17T04:46:07.480Z",
     "throughDate": "2026-10-17",
