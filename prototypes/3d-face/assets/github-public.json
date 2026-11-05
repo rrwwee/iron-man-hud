@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "source": "https://github-contributions-api.jogruber.de/v4/rrwwee?y=last",
   "profile": "https://github.com/rrwwee",
-  "refreshAttemptedAt": "2026-11-04T16:23:54.938Z",
+  "refreshAttemptedAt": "2026-11-05T16:32:01.016Z",
   "refreshStatus": "ok",
   "lastSuccessful": {
-    "fetchedAt": "2026-11-04T16:23:54.938Z",
-    "throughDate": "2026-11-04",
+    "fetchedAt": "2026-11-05T16:32:01.016Z",
+    "throughDate": "2026-11-05",
     "days": [
       {
         "date": "2025-11-02",
@@ -1478,6 +1478,10 @@
       },
       {
         "date": "2026-11-04",
+        "count": 0
+      },
+      {
+        "date": "2026-11-05",
         "count": 0
       }
     ]
