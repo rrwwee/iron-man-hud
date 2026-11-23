@@ -2,40 +2,12 @@
   "schemaVersion": 1,
   "source": "https://github-contributions-api.jogruber.de/v4/rrwwee?y=last",
   "profile": "https://github.com/rrwwee",
-  "refreshAttemptedAt": "2026-11-22T16:22:32.155Z",
-  "refreshStatus": "failed",
+  "refreshAttemptedAt": "2026-11-23T20:18:49.605Z",
+  "refreshStatus": "ok",
   "lastSuccessful": {
-    "fetchedAt": "2026-11-21T16:13:00.603Z",
-    "throughDate": "2026-11-21",
+    "fetchedAt": "2026-11-23T20:18:49.605Z",
+    "throughDate": "2026-11-23",
     "days": [
-      {
-        "date": "2025-11-16",
-        "count": 0
-      },
-      {
-        "date": "2025-11-17",
-        "count": 0
-      },
-      {
-        "date": "2025-11-18",
-        "count": 0
-      },
-      {
-        "date": "2025-11-19",
-        "count": 0
-      },
-      {
-        "date": "2025-11-20",
-        "count": 2
-      },
-      {
-        "date": "2025-11-21",
-        "count": 0
-      },
-      {
-        "date": "2025-11-22",
-        "count": 0
-      },
       {
         "date": "2025-11-23",
         "count": 0
@@ -1490,6 +1462,14 @@
       },
       {
         "date": "2026-11-21",
+        "count": 0
+      },
+      {
+        "date": "2026-11-22",
+        "count": 0
+      },
+      {
+        "date": "2026-11-23",
         "count": 0
       }
     ]
